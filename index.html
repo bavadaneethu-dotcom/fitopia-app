@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fitopia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Spline Sans', 'sans-serif'],
+            },
+            colors: {
+              // Light Mode: Yellow & White theme
+              light: {
+                bg: '#FFFFFF',
+                surface: '#FFFBEB', // yellow-50
+                primary: '#FACC15', // yellow-400
+                secondary: '#FEF08A', // yellow-200
+                text: '#422006', // yellow-950/brownish
+                muted: '#854D0E', // yellow-800
+              },
+              // Dark Mode: Green & Dark Green theme
+              dark: {
+                bg: '#022c22', // green-950
+                surface: '#064e3b', // green-900
+                primary: '#22c55e', // green-500
+                secondary: '#166534', // green-800
+                text: '#f0fdf4', // green-50
+                muted: '#86efac', // green-300
+              }
+            },
+            animation: {
+              'float': 'float 6s ease-in-out infinite',
+              'zoom-pan': 'zoom-pan 20s ease-in-out infinite',
+              'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              'zoom-pan': {
+                '0%': { transform: 'scale(1.1) translateX(0)' },
+                '50%': { transform: 'scale(1.2) translateX(-2%)' },
+                '100%': { transform: 'scale(1.1) translateX(0)' },
+              },
+              'fade-in-up': {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+      /* Hide scrollbar for IE, Edge and Firefox */
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+      }
+      body {
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* Animation Delays */
+      .delay-100 { animation-delay: 100ms; }
+      .delay-200 { animation-delay: 200ms; }
+      .delay-300 { animation-delay: 300ms; }
+      .delay-400 { animation-delay: 400ms; }
+      .delay-500 { animation-delay: 500ms; }
+      .delay-700 { animation-delay: 700ms; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body class="bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text transition-colors duration-300">
+    <div id="root"></div>
+  </body>
+</html>
