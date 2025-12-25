@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Screen } from '../types';
+import { Screen, FastingPlanConfig } from '../types';
 
 interface FastingTimerProps {
   onNavigate: (screen: Screen) => void;
@@ -8,180 +8,170 @@ interface FastingTimerProps {
   setIsFasting: (val: boolean) => void;
   fastStartTime: Date | null;
   setFastStartTime: (date: Date | null) => void;
+  fastingPlan: FastingPlanConfig;
 }
 
-const FastingTimer: React.FC<FastingTimerProps> = ({ onNavigate, isFasting, setIsFasting, fastStartTime, setFastStartTime }) => {
+const FastingTimer: React.FC<FastingTimerProps> = ({ onNavigate, isFasting, setIsFasting, fastStartTime, setFastStartTime, fastingPlan }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-
+  const fastGoalHours = fastingPlan.fastingHours || 16; 
+  
   useEffect(() => {
-    // Update current time every second to drive the timer
-    const timer = setInterval(() => {
-        setCurrentTime(new Date());
-    }, 1000);
+    // Sync current time immediately on mount
+    setCurrentTime(new Date());
+    
+    // Only run interval if fasting is active
+    let timer: any;
+    if (isFasting) {
+      timer = setInterval(() => {
+          setCurrentTime(new Date());
+      }, 1000);
+    }
     return () => clearInterval(timer);
-  }, []);
+  }, [isFasting]);
 
-  const getFastingString = () => {
-    if (!fastStartTime || !isFasting) return { h: '00', m: '00', s: '00', diff: 0 };
+  const getFastingStats = () => {
+    if (!fastStartTime || !isFasting) return { h: '00', m: '00', s: '00', percent: 0, totalSecs: 0 };
     
-    // Ensure fastStartTime is a valid Date object
-    const start = new Date(fastStartTime);
-    const now = currentTime;
-    
-    const diff = Math.max(0, now.getTime() - start.getTime());
-    
+    const diff = Math.max(0, currentTime.getTime() - fastStartTime.getTime());
     const totalSeconds = Math.floor(diff / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    const secs = totalSeconds % 60;
-
+    const goalSeconds = fastGoalHours * 3600;
+    const percent = Math.min((totalSeconds / goalSeconds) * 100, 100);
+    
     return {
-        h: hours.toString().padStart(2, '0'),
-        m: mins.toString().padStart(2, '0'),
-        s: secs.toString().padStart(2, '0'),
-        diff: diff // Return raw diff for progress calculation
+        h: Math.floor(totalSeconds / 3600).toString().padStart(2, '0'),
+        m: Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0'),
+        s: (totalSeconds % 60).toString().padStart(2, '0'),
+        percent,
+        totalSecs: totalSeconds
     };
   };
 
-  const handleToggle = () => {
-      if (isFasting) {
-          setIsFasting(false);
-          setFastStartTime(null);
-      } else {
-          setIsFasting(true);
-          setFastStartTime(new Date());
-      }
-  };
+  const stats = getFastingStats();
+  
+  const radius = 120;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (stats.percent / 100) * circumference;
 
-  const time = getFastingString();
-  
-  // Calculate progress ring (Visual effect looping every minute or based on 16h goal)
-  // Let's make it loop every minute for the 'seconds' indicator visual
-  const secondsProgress = parseFloat(time.s) / 60;
-  
   return (
-    <div className={`relative flex h-full min-h-screen w-full flex-col overflow-hidden transition-colors duration-1000 font-sans ${isFasting ? 'bg-indigo-950 text-white' : 'bg-orange-50 text-gray-800'}`}>
+    <div className={`relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-[#FFF8EE] font-sans transition-colors duration-700`}>
       
-      {/* Dynamic Backgrounds */}
-      {isFasting ? (
-          <>
-            {/* Night Watch / ZPD Patrol Theme */}
-            <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-slate-900 to-black z-0"></div>
-            {/* Spotlight Effect */}
-            <div className="absolute top-0 left-1/4 w-40 h-[100vh] bg-white/5 rotate-12 blur-xl animate-pulse-slow"></div>
-            <div className="absolute top-0 right-1/4 w-20 h-[100vh] bg-blue-500/5 -rotate-12 blur-xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-            
-            {/* Stars */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-          </>
-      ) : (
-          <>
-             {/* Day Theme */}
-             <div className="absolute inset-0 bg-gradient-to-b from-orange-100 to-yellow-50 z-0"></div>
-             <div className="absolute -top-20 -right-20 size-80 bg-yellow-300/30 rounded-full blur-3xl animate-pulse-slow"></div>
-          </>
+      {/* Atmosphere Glow when active */}
+      {isFasting && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180vw] h-[180vw] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)] animate-pulse-slow pointer-events-none"></div>
       )}
 
-      {/* Header */}
-      <div className="relative z-10 flex items-center justify-between p-6">
+      {/* Top Header */}
+      <div className="relative z-20 flex items-center justify-between p-6 pt-12">
+        <div className="size-12"></div>
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFEDD5] border border-[#FED7AA] shadow-sm">
+            <span className={`size-2 rounded-full ${isFasting ? 'bg-blue-500 animate-pulse' : 'bg-[#F97316]'}`}></span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#9A3412]">{isFasting ? 'ON DUTY' : 'RESTING'}</span>
+        </div>
         <button 
           onClick={() => onNavigate(Screen.HOME)}
-          className={`size-12 rounded-full backdrop-blur-md flex items-center justify-center transition-colors ${isFasting ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-black/5 hover:bg-black/10 text-gray-800'}`}
+          className="size-12 rounded-full flex items-center justify-center bg-white/40 dark:bg-black/10 hover:bg-black/20 transition-colors shadow-sm"
         >
-          <span className="material-symbols-outlined text-2xl">arrow_back</span>
+          <span className="material-symbols-outlined text-gray-800">close</span>
         </button>
-        <div className="flex flex-col items-center">
-             <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isFasting ? 'text-blue-300' : 'text-orange-500'}`}>
-                 {isFasting ? 'ZPD Night Watch' : 'Break Time'}
-             </span>
-             <h2 className={`text-lg font-bold uppercase tracking-wider ${isFasting ? 'text-white' : 'text-gray-900'}`}>
-                 {isFasting ? 'Shift Active' : 'Eating Window'}
-             </h2>
-        </div>
-        <div className="size-12"></div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6">
           
-          {/* Central Timer Visual */}
-          <div className="relative size-72 flex items-center justify-center mb-10">
-              {/* Outer Pulse Rings */}
-              <div className={`absolute inset-0 rounded-full border-4 ${isFasting ? 'border-indigo-500/30 animate-ping' : 'border-orange-300/30'} opacity-20`}></div>
-              <div className={`absolute -inset-4 rounded-full border-2 ${isFasting ? 'border-blue-500/20' : 'border-yellow-400/20'}`}></div>
+          {/* Main Visual Circle */}
+          <div className="relative size-80 flex items-center justify-center">
+              {/* Ring Background */}
+              <div className="absolute inset-0 rounded-full border-[18px] border-[#FFEDD5] opacity-50"></div>
               
-              {/* Badge Shape Container */}
-              <div className={`relative size-full rounded-full shadow-2xl flex flex-col items-center justify-center backdrop-blur-sm border-4 transition-colors duration-500 ${isFasting ? 'bg-black/30 border-blue-500/50 shadow-blue-900/50' : 'bg-white/60 border-orange-400/50 shadow-orange-200'}`}>
-                  
+              {/* Active Ring (SVG) */}
+              <svg className="absolute inset-0 size-full transform -rotate-90 overflow-visible" viewBox="0 0 280 280">
+                  {isFasting && (
+                      <circle 
+                        cx="140" cy="140" r={radius} 
+                        className="stroke-blue-500 transition-all duration-1000 ease-out"
+                        fill="none" strokeWidth="16" strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                      />
+                  )}
+              </svg>
+
+              {/* Central Content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   {isFasting ? (
-                      <div className="flex flex-col items-center animate-fade-in">
-                          <span className="material-symbols-outlined text-4xl text-blue-400 mb-2 filled">local_police</span>
-                          <div className="text-6xl font-black tracking-tighter tabular-nums leading-none text-white drop-shadow-lg">
-                              {time.h}:{time.m}
+                      <div className="animate-fade-in flex flex-col items-center">
+                          <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-2">TIME ON DUTY</span>
+                          <div className="flex items-baseline gap-1">
+                              <span className="text-6xl font-black tracking-tighter text-gray-800 font-mono">{stats.h}</span>
+                              <span className="text-xl font-bold text-gray-400">h</span>
+                              <span className="text-6xl font-black tracking-tighter text-gray-800 font-mono">{stats.m}</span>
+                              <span className="text-xl font-bold text-gray-400">m</span>
                           </div>
-                          <span className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mt-2">On Duty</span>
+                          {/* Added Seconds for visual "ticking" effect */}
+                          <div className="mt-1">
+                             <span className="text-lg font-black text-blue-400 font-mono tracking-widest">{stats.s}s</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-4 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
+                              <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{stats.percent.toFixed(1)}% TO TARGET</span>
+                          </div>
                       </div>
                   ) : (
-                      <div className="flex flex-col items-center animate-fade-in">
-                          <span className="material-symbols-outlined text-5xl text-orange-500 mb-2">restaurant</span>
-                          <span className="text-2xl font-black text-gray-800 uppercase tracking-tight">Feed</span>
-                          <span className="text-xs font-bold text-orange-400 uppercase tracking-widest mt-1">Window Open</span>
+                      <div className="animate-fade-in flex flex-col items-center">
+                          <span className="text-7xl mb-4 drop-shadow-lg transform -rotate-12">🥕</span>
+                          <h2 className="text-[28px] font-black text-[#1F2937] uppercase tracking-tighter leading-none">Ready to fast?</h2>
+                          <p className="text-[10px] font-black text-[#6B7280] uppercase tracking-[0.15em] mt-3">Goal: {fastGoalHours} Hours</p>
                       </div>
                   )}
-
-                  {/* Progress Ring SVG */}
-                  <svg className="absolute inset-0 size-full -rotate-90 pointer-events-none">
-                       <circle
-                         cx="50%" cy="50%" r="48%"
-                         fill="transparent"
-                         stroke={isFasting ? "rgba(59, 130, 246, 0.2)" : "rgba(251, 146, 60, 0.2)"}
-                         strokeWidth="4"
-                       />
-                       <circle
-                         cx="50%" cy="50%" r="48%"
-                         fill="transparent"
-                         stroke={isFasting ? "#60A5FA" : "#F97316"}
-                         strokeWidth="4"
-                         strokeDasharray="289" // Approx circumference
-                         strokeDashoffset={isFasting ? 289 - (secondsProgress * 289) : 0} 
-                         strokeLinecap="round"
-                         className="transition-all duration-1000 ease-linear"
-                       />
-                  </svg>
               </div>
           </div>
 
-          {/* Action Button */}
+          {/* Coach's Log Card */}
+          <div className="mt-16 mb-10 w-full max-w-sm">
+              <div className="p-6 rounded-[2rem] border-2 border-dashed border-[#FED7AA] bg-[#FFFBF0] flex items-center gap-5 shadow-sm">
+                  <div className="size-14 rounded-2xl shrink-0 flex items-center justify-center text-3xl bg-[#FFEDD5]">
+                      👮
+                  </div>
+                  <div className="flex-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-[#F97316]">Coach's Log</p>
+                      <p className="text-[13px] font-bold italic leading-snug text-[#4B5563]">
+                          {isFasting 
+                            ? "\"Focus on the case, rookie! Your body is preparing for elite performance. Keep that focus high!\"" 
+                            : "\"Resting is part of the training! Clock in when you're ready for your next patrol shift.\""}
+                      </p>
+                  </div>
+              </div>
+          </div>
+
+          {/* Large Action Button */}
           <button 
-            onClick={handleToggle}
-            className={`w-full max-w-xs h-20 rounded-2xl flex items-center justify-center gap-3 shadow-xl transition-all active:scale-95 group relative overflow-hidden ${isFasting ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-yellow-400 hover:bg-yellow-300 text-black'}`}
+            onClick={() => { 
+                if(isFasting) {
+                    setIsFasting(false); 
+                    setFastStartTime(null); 
+                } else { 
+                    const now = new Date();
+                    setFastStartTime(now); 
+                    setCurrentTime(now);
+                    setIsFasting(true); 
+                } 
+            }} 
+            className="w-full max-w-xs h-16 rounded-[1.5rem] bg-[#2563EB] hover:bg-blue-700 text-white font-black uppercase tracking-[0.15em] text-xs shadow-xl shadow-blue-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
           >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-2xl"></div>
-              
-              <span className="material-symbols-outlined text-3xl filled relative z-10">{isFasting ? 'stop_circle' : 'play_circle'}</span>
-              <div className="flex flex-col items-start relative z-10">
-                  <span className="text-xl font-black uppercase tracking-wide">{isFasting ? 'End Shift' : 'Start Watch'}</span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isFasting ? 'text-red-200' : 'text-yellow-800'}`}>
-                      {isFasting ? 'Stop Fasting' : 'Begin Fast'}
-                  </span>
-              </div>
+              <span className="material-symbols-outlined filled text-lg">
+                  {isFasting ? 'stop_circle' : 'play_circle'}
+              </span>
+              {isFasting ? 'End Fasting Patrol' : 'Clock In for Duty'}
           </button>
-
-          {/* Info Stats */}
-          <div className="grid grid-cols-2 gap-4 w-full max-w-xs mt-12">
-              <div className={`p-4 rounded-xl border flex flex-col items-center ${isFasting ? 'bg-white/5 border-white/10' : 'bg-white/60 border-orange-200'}`}>
-                   <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Started</span>
-                   <span className="font-mono font-bold text-lg">
-                       {fastStartTime ? new Date(fastStartTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
-                   </span>
-              </div>
-              <div className={`p-4 rounded-xl border flex flex-col items-center ${isFasting ? 'bg-white/5 border-white/10' : 'bg-white/60 border-orange-200'}`}>
-                   <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Goal</span>
-                   <span className="font-mono font-bold text-lg">16h</span>
-              </div>
-          </div>
-
       </div>
+
+      <style>{`
+        .animate-pulse-slow {
+            animation: pulse-ring 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.05; }
+        }
+      `}</style>
     </div>
   );
 };

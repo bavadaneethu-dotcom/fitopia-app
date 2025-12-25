@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Screen } from '../types';
 
 interface LoginProps {
@@ -6,6 +7,50 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onNavigate }) => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  
+  const [errors, setErrors] = useState({
+    email: ''
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate email
+    let isValid = true;
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: 'Email is required' }));
+      isValid = false;
+    } else if (!validateEmail(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email' }));
+      isValid = false;
+    } else {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+
+    if (isValid) {
+      onNavigate(Screen.HOME);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'email') {
+      // Clear error on change if it exists
+      if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col relative w-full h-full bg-light-bg dark:bg-dark-bg animate-fade-in">
       <div className="relative h-[35vh] w-full flex-shrink-0">
@@ -27,48 +72,69 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <p className="text-light-text/60 dark:text-dark-text/60 text-sm font-medium">Ready to run wild? Log in to continue.</p>
         </div>
 
-        <form className="w-full space-y-5" onSubmit={(e) => { e.preventDefault(); onNavigate(Screen.HOME); }}>
+        <form className="w-full space-y-5" onSubmit={handleSubmit}>
+          {/* Email Field */}
           <div className="space-y-1.5">
             <label className="block text-sm font-bold ml-1 text-light-text/80 dark:text-dark-text/80" htmlFor="email">Email</label>
-            <div className="relative">
+            <div className={`relative group transition-all duration-300 ${errors.email ? 'animate-shake' : ''}`}>
               <input 
-                className="block w-full rounded-2xl border-transparent bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 text-light-text dark:text-dark-text shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-light-primary dark:focus:ring-dark-primary sm:text-sm sm:leading-6 transition-all duration-200 outline-none" 
+                className={`block w-full rounded-2xl border-2 bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 text-light-text dark:text-dark-text shadow-sm placeholder:text-gray-400 focus:outline-none transition-all duration-200 sm:text-sm sm:leading-6 ${
+                  errors.email 
+                  ? 'border-red-300 focus:border-red-500 bg-red-50/50' 
+                  : 'border-transparent focus:border-light-primary dark:focus:border-dark-primary ring-1 ring-inset ring-black/5 dark:ring-white/10 focus:ring-2'
+                }`}
                 id="email" 
                 name="email" 
                 placeholder="judy.hopps@zpd.com" 
                 type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
               />
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                <span className="material-symbols-outlined text-gray-400 text-[20px]">mail</span>
+                <span className={`material-symbols-outlined text-[20px] transition-colors ${errors.email ? 'text-red-500' : 'text-gray-400'}`}>mail</span>
               </div>
             </div>
+            {errors.email && <p className="text-[10px] font-bold text-red-500 ml-1">{errors.email}</p>}
           </div>
 
+          {/* Password Field */}
           <div className="space-y-1.5">
             <label className="block text-sm font-bold ml-1 text-light-text/80 dark:text-dark-text/80" htmlFor="password">Password</label>
             <div className="relative">
               <input 
-                className="block w-full rounded-2xl border-transparent bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 text-light-text dark:text-dark-text shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-light-primary dark:focus:ring-dark-primary sm:text-sm sm:leading-6 transition-all duration-200 outline-none" 
+                className="block w-full rounded-2xl border-transparent bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 pr-12 text-light-text dark:text-dark-text shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-light-primary dark:focus:ring-dark-primary sm:text-sm sm:leading-6 transition-all duration-200 outline-none" 
                 id="password" 
                 name="password" 
                 placeholder="••••••••" 
-                type="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
               />
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                 <span className="material-symbols-outlined text-gray-400 text-[20px]">lock</span>
               </div>
-              <button className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-light-text dark:hover:text-dark-text transition-colors" type="button">
-                <span className="material-symbols-outlined text-[20px]">visibility</span>
+              <button 
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-light-text dark:hover:text-dark-text transition-colors focus:outline-none" 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility' : 'visibility_off'}</span>
               </button>
             </div>
             <div className="flex justify-end pt-1">
-              <button type="button" className="text-xs font-bold text-light-muted dark:text-dark-muted hover:text-light-primary dark:hover:text-dark-primary transition-colors">Forgot Password?</button>
+              <button 
+                type="button" 
+                onClick={() => onNavigate(Screen.FORGOT_PASSWORD)}
+                className="text-xs font-bold text-light-muted dark:text-dark-muted hover:text-light-primary dark:hover:text-dark-primary transition-colors hover:underline"
+              >
+                Forgot Password?
+              </button>
             </div>
           </div>
 
           <button 
             type="submit"
-            className="w-full mt-2 flex items-center justify-center rounded-full bg-light-primary dark:bg-dark-primary py-4 px-4 text-base font-bold text-light-text dark:text-dark-bg shadow-lg shadow-light-primary/25 dark:shadow-dark-primary/25 transition-all duration-300 hover:shadow-light-primary/40 dark:hover:shadow-dark-primary/40 hover:scale-[1.01] active:scale-[0.98]"
+            className="w-full mt-2 flex items-center justify-center rounded-full bg-yellow-400 dark:bg-yellow-500 py-4 px-4 text-base font-bold text-black dark:text-black shadow-lg shadow-yellow-400/25 dark:shadow-yellow-500/25 transition-all duration-300 hover:shadow-yellow-400/40 dark:hover:shadow-yellow-500/40 hover:scale-[1.01] active:scale-[0.98]"
           >
             Login
           </button>
@@ -103,6 +169,17 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           </p>
         </div>
       </div>
+      
+      <style>{`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+          }
+          .animate-shake {
+            animation: shake 0.3s ease-in-out;
+          }
+      `}</style>
     </div>
   );
 };

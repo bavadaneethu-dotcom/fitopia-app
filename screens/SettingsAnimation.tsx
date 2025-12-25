@@ -13,14 +13,14 @@ const SettingsAnimation: React.FC<SettingsAnimationProps> = ({ onNavigate }) => 
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-light-bg dark:bg-dark-bg animate-fade-in font-sans">
       {/* Header */}
       <div className="flex items-center px-6 pt-6 pb-2 justify-between z-20 sticky top-0 bg-light-bg/90 dark:bg-dark-bg/90 backdrop-blur-sm">
+        <div className="size-12"></div>
+        <h2 className="text-lg font-black leading-tight text-light-text dark:text-white uppercase tracking-tight">Graphics</h2>
         <button 
-          onClick={() => onNavigate(Screen.SETTINGS)}
+          onClick={() => onNavigate(Screen.HOME)}
           className="flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors active:scale-90"
         >
-          <span className="material-symbols-outlined text-light-text dark:text-white text-2xl">arrow_back</span>
+          <span className="material-symbols-outlined text-light-text dark:text-white text-2xl">close</span>
         </button>
-        <h2 className="text-lg font-black leading-tight text-light-text dark:text-white uppercase tracking-tight">Graphics</h2>
-        <div className="size-12"></div>
       </div>
 
       <div className="flex-1 px-6 pt-4 flex flex-col gap-6">

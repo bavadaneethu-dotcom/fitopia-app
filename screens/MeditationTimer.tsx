@@ -1,21 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { Screen } from '../types';
+import { Screen, Character } from '../types';
 
 interface MeditationTimerProps {
   onNavigate: (screen: Screen) => void;
   sessionData: { title: string; icon: string; duration?: string } | null;
+  activeCharacter: Character;
   onComplete?: (data: any) => void;
 }
 
-const MeditationTimer: React.FC<MeditationTimerProps> = ({ onNavigate, sessionData, onComplete }) => {
+const MeditationTimer: React.FC<MeditationTimerProps> = ({ onNavigate, sessionData, activeCharacter, onComplete }) => {
   const [isActive, setIsActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // Default 15 min in seconds
-  const [showMenu, setShowMenu] = useState(false);
+  const [initialTime, setInitialTime] = useState(15 * 60);
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (sessionData?.duration) {
       const [min, sec] = sessionData.duration.split(':').map(Number);
+      setInitialTime((min || 0) * 60 + (sec || 0));
       setTimeLeft((min || 0) * 60 + (sec || 0));
     }
   }, [sessionData]);
@@ -23,11 +27,10 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onNavigate, sessionDa
   useEffect(() => {
     let interval: any;
     if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
+      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     } else if (timeLeft === 0) {
       setIsActive(false);
+      finishSession();
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft]);
@@ -38,114 +41,97 @@ const MeditationTimer: React.FC<MeditationTimerProps> = ({ onNavigate, sessionDa
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const toggleTimer = () => setIsActive(!isActive);
-  
-  const finishSession = () => {
-    if (onComplete) {
-        onComplete({ 
-            ...sessionData,
-            duration: sessionData?.duration || '10:00', // Use session duration
-        });
+  const attemptStop = () => {
+    const elapsed = initialTime - timeLeft;
+    if (elapsed < 300) { // 5 mins
+        setIsActive(false);
+        setShowConfirm(true);
     } else {
-        onNavigate(Screen.HOME);
+        finishSession();
     }
   };
 
+  const finishSession = () => {
+    const elapsed = initialTime - timeLeft;
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const formattedDuration = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    let msg = "";
+    if (elapsed < 300) msg = "Giving up so soon? Even Flash takes longer to say 'Hello'. Come back when you're ready to zen!";
+    else if (elapsed < 600) msg = "Not bad, rookie. You're starting to find your center. Keep that Mystic Springs vibe!";
+    else msg = "Omm... You are one with the fluff! Yax would be proud of this focus!";
+
+    setFeedback(msg);
+    setTimeout(() => {
+        if (onComplete) onComplete({ ...sessionData, duration: formattedDuration });
+        else onNavigate(Screen.HOME);
+    }, 3000);
+  };
+
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-teal-50 dark:bg-gray-900 font-sans">
-      {/* Dynamic Background */}
-      <div className={`absolute inset-0 bg-gradient-to-b from-teal-100 to-blue-50 dark:from-gray-900 dark:to-teal-900/40 transition-colors duration-[10s] ease-in-out ${isActive ? 'scale-110' : 'scale-100'}`}></div>
+    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-[#E6FFFA] dark:bg-gray-900 font-sans transition-all duration-1000">
       
-      {/* High Animation: Floating Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(6)].map((_, i) => (
-             <div key={i} className={`absolute rounded-full bg-white/20 blur-xl animate-float opacity-50`} 
-                  style={{
-                      width: `${Math.random() * 100 + 50}px`,
-                      height: `${Math.random() * 100 + 50}px`,
-                      left: `${Math.random() * 100}%`,
-                      top: `${Math.random() * 100}%`,
-                      animationDuration: `${Math.random() * 10 + 10}s`,
-                      animationDelay: `${Math.random() * 5}s`
-                  }}
-             ></div>
-          ))}
-      </div>
-      
-      {/* Animated Lotus/Mandala Effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
-          {/* Outer Breathing Ring */}
-          <div className={`absolute inset-0 rounded-full border border-teal-200/20 dark:border-teal-700/20 scale-50 transition-transform duration-[4000ms] ease-in-out ${isActive ? 'scale-100 opacity-0' : 'opacity-10'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.6, 1)' }}></div>
-          
-          <div className={`absolute inset-[15%] rounded-full border-2 border-teal-200/30 dark:border-teal-700/30 scale-50 ${isActive ? 'animate-ping' : ''}`} style={{ animationDuration: '4s' }}></div>
-          <div className={`absolute inset-[30%] rounded-full border-2 border-teal-300/20 dark:border-teal-500/20 scale-75 ${isActive ? 'animate-ping' : ''}`} style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
-          <div className={`absolute inset-[40%] rounded-full bg-teal-100/50 dark:bg-teal-900/10 blur-3xl transition-transform duration-[4000ms] ease-in-out ${isActive ? 'scale-125' : 'scale-100'}`}></div>
+      {/* Background Zen Leaves */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+          <span className="absolute top-10 left-10 text-4xl animate-float" style={{ animationDelay: '0s' }}>🍃</span>
+          <span className="absolute top-40 right-20 text-2xl animate-float" style={{ animationDelay: '1s' }}>🍃</span>
+          <span className="absolute bottom-20 left-1/4 text-3xl animate-float" style={{ animationDelay: '2s' }}>🍃</span>
       </div>
 
-      {/* Header */}
-      <div className="relative z-10 flex items-center justify-between p-6">
-        <button onClick={() => setShowMenu(true)} className="p-2 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-teal-800 dark:text-teal-200 transition-colors">
-          <span className="material-symbols-outlined">menu</span>
-        </button>
-        <div className="flex flex-col items-center">
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 dark:text-teal-400 opacity-80">Mystic Springs</span>
-             <h2 className="text-lg font-bold text-teal-900 dark:text-white drop-shadow-sm">{sessionData?.title || 'Meditation'}</h2>
-        </div>
+      <div className="relative z-20 flex items-center justify-between px-6 pt-10 pb-2">
         <div className="size-10"></div>
-      </div>
-
-      {/* Main Visual */}
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10">
-          <div className={`text-9xl mb-8 filter drop-shadow-xl transform transition-all duration-[4s] ease-in-out ${isActive ? 'scale-110 -translate-y-4 brightness-110' : 'scale-100'}`}>
-              {sessionData?.icon || '🧘'}
-          </div>
-          
-          <div className="text-8xl font-black text-teal-800 dark:text-teal-100 tracking-tighter tabular-nums mb-4 drop-shadow-md">
-              {formatTime(timeLeft)}
-          </div>
-          <p className="text-teal-600 dark:text-teal-400 font-bold uppercase tracking-widest text-xs transition-opacity duration-1000">
-              {isActive ? <span className="animate-pulse">Breathe In... Breathe Out...</span> : 'Ready to Begin?'}
-          </p>
-      </div>
-
-      {/* Primary Control */}
-      <div className="relative z-10 p-10 pb-24 flex items-center justify-center gap-6">
-           <button 
-             onClick={toggleTimer}
-             className={`size-24 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 ${isActive ? 'bg-amber-100 text-amber-600 ring-4 ring-amber-200/50' : 'bg-teal-500 text-white hover:scale-105 ring-4 ring-teal-300/50'}`}
-           >
-               <span className="material-symbols-outlined text-5xl filled">{isActive ? 'pause' : 'play_arrow'}</span>
-           </button>
-      </div>
-
-      {/* Full Screen Menu Overlay */}
-      {showMenu && (
-        <div className="absolute inset-0 bg-teal-900/90 backdrop-blur-xl z-50 flex flex-col items-center justify-center animate-fade-in p-8 gap-6">
-           <h2 className="text-white text-2xl font-black uppercase tracking-widest mb-4">Session Menu</h2>
-           
-           <button 
-             onClick={() => { setShowMenu(false); toggleTimer(); }}
-             className="w-full py-5 bg-white text-teal-900 rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-           >
-             <span className="material-symbols-outlined filled">{isActive ? 'pause' : 'play_arrow'}</span>
-             {isActive ? 'Pause Session' : 'Resume Session'}
-           </button>
-
-           <button 
-             onClick={finishSession}
-             className="w-full py-5 bg-teal-800 text-white rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
-           >
-             <span className="material-symbols-outlined">stop</span>
-             End Session
-           </button>
-
-           <button 
-             onClick={() => setShowMenu(false)}
-             className="mt-8 text-teal-200 font-bold uppercase tracking-widest text-sm"
-           >
-             Close Menu
-           </button>
+        <div className="flex flex-col items-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 mb-1">Mystic Springs Oasis</span>
+            <h2 className="text-xl font-black text-teal-900 dark:text-white uppercase">{sessionData?.title || 'Mindfulness'}</h2>
         </div>
+        <button 
+          onClick={attemptStop}
+          className="size-10 rounded-full bg-white/40 dark:bg-white/10 shadow-sm backdrop-blur-md flex items-center justify-center transition-transform active:scale-90"
+        >
+          <span className="material-symbols-outlined text-teal-900 dark:text-white text-2xl">close</span>
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+          {feedback ? (
+              <div className="text-center px-10 animate-bounce-in">
+                  <span className="text-6xl mb-6 block">✨</span>
+                  <p className="text-xl font-black text-teal-800 dark:text-white italic leading-snug">"{feedback}"</p>
+              </div>
+          ) : (
+              <>
+                  <div className={`text-9xl mb-8 transform transition-all duration-[4s] ${isActive ? 'scale-110 rotate-3' : 'scale-100 rotate-0'}`}>
+                      {isActive ? '🧘' : '🦥'}
+                  </div>
+                  <div className="text-[100px] font-black text-[#0F766E] dark:text-teal-100 tracking-tighter leading-none mb-6">
+                      {formatTime(timeLeft)}
+                  </div>
+                  <p className="text-teal-600 font-black uppercase text-xs tracking-widest">{isActive ? 'Finding Balance...' : 'Ready to Breathe?'}</p>
+              </>
+          )}
+      </div>
+
+      <div className="relative z-10 p-10 pb-16 flex items-center justify-center gap-4">
+           <button onClick={() => setIsActive(!isActive)} className={`h-20 w-48 rounded-2xl flex items-center justify-center shadow-lg border-b-4 ${isActive ? 'bg-yellow-400 border-yellow-600 text-yellow-900' : 'bg-teal-500 border-teal-700 text-white'}`}>
+               <span className="material-symbols-outlined text-4xl filled">{isActive ? 'pause' : 'play_arrow'}</span>
+           </button>
+           <button onClick={attemptStop} className="size-20 rounded-2xl bg-white/50 dark:bg-white/10 border-b-4 border-gray-300 text-gray-500 flex items-center justify-center shadow-md active:border-b-0">
+               <span className="material-symbols-outlined text-3xl filled">stop</span>
+           </button>
+      </div>
+
+      {showConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
+              <div className="bg-white rounded-[2.5rem] p-8 text-center shadow-2xl border-4 border-teal-500">
+                  <h3 className="text-2xl font-black text-gray-800 mb-2 uppercase">Abandoning Zen?</h3>
+                  <p className="text-sm font-bold text-gray-500 mb-8">"Giving up so soon? Even Flash takes longer to say 'Hello'. Stay a bit longer?"</p>
+                  <div className="flex flex-col gap-3">
+                      <button onClick={() => { setShowConfirm(false); setIsActive(true); }} className="w-full py-4 bg-teal-500 text-white font-black rounded-xl uppercase">Resume Peace</button>
+                      <button onClick={() => { setShowConfirm(false); finishSession(); }} className="w-full py-4 bg-gray-100 text-gray-400 font-bold rounded-xl uppercase">End Anyway</button>
+                  </div>
+              </div>
+          </div>
       )}
     </div>
   );

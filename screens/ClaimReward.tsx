@@ -4,100 +4,233 @@ import { Screen, Character } from '../types';
 
 interface ClaimRewardProps {
   activeCharacter: Character;
+  setActiveCharacter: (char: Character) => void;
   onNavigate: (screen: Screen) => void;
   onUnlock: (itemId: string) => void;
 }
 
-const ClaimReward: React.FC<ClaimRewardProps> = ({ activeCharacter, onNavigate, onUnlock }) => {
-  const [stage, setStage] = useState<'intro' | 'reveal' | 'finished'>('intro');
+const themeStyles: Record<string, { 
+    bgFrom: string; 
+    bgTo: string;
+    button: string;
+    textAccent: string;
+    dotColor: string;
+}> = {
+    blue: { 
+        bgFrom: 'from-[#EFF6FF]', bgTo: 'to-[#DBEAFE]', // Blue 50-100
+        button: 'bg-blue-500 hover:bg-blue-400',
+        textAccent: 'text-blue-600 dark:text-blue-400',
+        dotColor: '#3B82F6'
+    },
+    green: { 
+        bgFrom: 'from-[#ECFDF5]', bgTo: 'to-[#D1FAE5]', // Emerald 50-100
+        button: 'bg-emerald-500 hover:bg-emerald-400',
+        textAccent: 'text-emerald-600 dark:text-emerald-400',
+        dotColor: '#10B981'
+    },
+    orange: { 
+        bgFrom: 'from-[#FFF7ED]', bgTo: 'to-[#FFEDD5]', // Orange 50-100
+        button: 'bg-orange-500 hover:bg-orange-400',
+        textAccent: 'text-orange-600 dark:text-orange-400',
+        dotColor: '#F97316'
+    },
+    gray: { 
+        bgFrom: 'from-[#F8FAFC]', bgTo: 'to-[#E2E8F0]', // Slate 50-200
+        button: 'bg-slate-600 hover:bg-slate-500',
+        textAccent: 'text-slate-600 dark:text-slate-400',
+        dotColor: '#64748B'
+    },
+    brown: { 
+        bgFrom: 'from-[#FFFBEB]', bgTo: 'to-[#FEF3C7]', // Amber 50-100
+        button: 'bg-amber-600 hover:bg-amber-500',
+        textAccent: 'text-amber-700 dark:text-amber-400',
+        dotColor: '#D97706'
+    }
+};
 
-  // Trigger unlock on mount
-  useEffect(() => {
-    onUnlock('shades'); // Simulate unlocking the "Aviator Shades" for demo
+const ClaimReward: React.FC<ClaimRewardProps> = ({ activeCharacter, setActiveCharacter, onNavigate, onUnlock }) => {
+  const [viewState, setViewState] = useState<'initial' | 'revealing' | 'decision'>('initial');
+  const [isEquipped, setIsEquipped] = useState(false);
+  const theme = themeStyles[activeCharacter.themeColor] || themeStyles.blue;
+  
+  // Reward Item Data (Mocked for this screen as 'shades')
+  const rewardItem = { id: 'shades', name: 'Aviator Shades', icon: 'eyeglasses', type: 'Accessory' };
+
+  // Trigger unlock when transitioning to reveal
+  const handleCollect = () => {
+    setViewState('revealing');
+    onUnlock(rewardItem.id);
     
-    // Animation sequence
-    setTimeout(() => setStage('reveal'), 2000);
-    setTimeout(() => setStage('finished'), 4000);
-  }, []);
+    // Animation timing
+    setTimeout(() => {
+        setViewState('decision');
+        // Auto-preview equipment
+        setIsEquipped(true); 
+    }, 2000);
+  };
 
-  // Determine animation based on character
-  const getAnimationClass = () => {
-      switch (activeCharacter.id) {
-          case 'judy': return 'animate-bounce'; // Hopping
-          case 'nick': return 'animate-wiggle'; // Cool wiggle
-          case 'bogo': return 'animate-pulse'; // Flexing
-          case 'clawhauser': return 'animate-spin-slow'; // Happy spin
-          default: return 'animate-bounce';
-      }
+  const handleConfirm = () => {
+      if (isEquipped) {
+          setActiveCharacter({ ...activeCharacter, accessory: rewardItem.id });
+      } 
+      onNavigate(Screen.HOME);
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-light-bg dark:bg-dark-bg">
-      {/* Background FX */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-light-primary/20 via-transparent to-transparent animate-pulse-slow"></div>
-          {stage !== 'intro' && (
-              <>
-                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-400 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
-                <div className="absolute top-1/3 right-1/4 w-3 h-3 bg-green-400 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
-                <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-blue-400 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
-              </>
+    <div className={`relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-[#FEF3C7] dark:bg-[#1f1d18] font-sans transition-colors duration-700`}>
+      
+      {/* Dynamic Background */}
+      <div className={`absolute inset-0 bg-gradient-to-b ${theme.bgFrom} ${theme.bgTo} dark:from-[#111] dark:to-[#222] transition-colors duration-500`}></div>
+      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: `radial-gradient(${theme.dotColor} 1px, transparent 1px)`, backgroundSize: '30px 30px' }}></div>
+
+      {/* Header: Streak & Close */}
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-30">
+          <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 dark:border-white/10 shadow-sm animate-fade-in-up">
+                  <span className={`material-symbols-outlined filled text-lg animate-pulse-slow ${theme.textAccent}`}>local_fire_department</span>
+                  <span className={`text-xs font-black uppercase tracking-wider ${theme.textAccent}`}>12 Day Streak</span>
+              </div>
+          </div>
+          
+          <button 
+            onClick={() => onNavigate(Screen.HOME)}
+            className="size-10 rounded-full bg-white/60 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-colors shadow-sm"
+          >
+            <span className="material-symbols-outlined text-gray-600 dark:text-gray-300">close</span>
+          </button>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 w-full max-w-sm mx-auto">
+          
+          {/* STAGE 1: INITIAL REWARD CRATE */}
+          {viewState === 'initial' && (
+              <div className="flex flex-col items-center gap-8 animate-fade-in">
+                  <div className="relative group cursor-pointer" onClick={handleCollect}>
+                      {/* Glow */}
+                      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-64 rounded-full blur-3xl animate-pulse-slow transition-colors opacity-40`} style={{ backgroundColor: theme.dotColor }}></div>
+                      
+                      {/* Crate Icon */}
+                      <div className="relative z-10 text-[150px] drop-shadow-2xl animate-float transition-transform duration-300 group-hover:scale-110 group-active:scale-95">
+                          🎁
+                      </div>
+                      
+                      {/* Label */}
+                      <div className={`absolute -bottom-4 left-1/2 -translate-x-1/2 ${theme.button} text-white px-4 py-1 rounded-full font-black text-xs uppercase tracking-widest shadow-lg whitespace-nowrap`}>
+                          Mystery Drop
+                      </div>
+                  </div>
+
+                  <div className="text-center space-y-2">
+                      <h2 className="text-3xl font-black text-gray-800 dark:text-white tracking-tight">Reward Ready!</h2>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Keep up the hustle to earn exclusive gear.</p>
+                  </div>
+              </div>
+          )}
+
+          {/* STAGE 2: REVEAL ANIMATION */}
+          {viewState === 'revealing' && (
+              <div className="flex flex-col items-center justify-center">
+                  <div className="text-[100px] animate-ping opacity-50">✨</div>
+              </div>
+          )}
+
+          {/* STAGE 3: DECISION (EQUIP/UNEQUIP) */}
+          {viewState === 'decision' && (
+              <div className="flex flex-col items-center w-full animate-pop-in">
+                  
+                  {/* Character Preview Container */}
+                  <div className="relative w-full aspect-square max-w-[300px] mb-6">
+                      <div className="absolute inset-0 bg-white/40 dark:bg-white/5 rounded-[3rem] border-4 border-white dark:border-gray-700 shadow-2xl overflow-hidden">
+                          {/* Radial Highlight */}
+                          <div className={`absolute inset-0 bg-gradient-to-t from-${activeCharacter.themeColor}-400/20 to-transparent`}></div>
+                          
+                          {/* Character Image */}
+                          <div 
+                            className="absolute inset-0 bg-cover bg-top transition-transform duration-500"
+                            style={{ backgroundImage: `url("${activeCharacter.image}")` }}
+                          ></div>
+
+                          {/* Reward Overlay (Simple visualization for demo) */}
+                          {isEquipped && (
+                              <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 bg-black/80 p-2 rounded-full border-2 shadow-xl animate-bounce-in`} style={{ borderColor: theme.dotColor }}>
+                                  <span className="material-symbols-outlined text-4xl" style={{ color: theme.dotColor }}>eyeglasses</span>
+                              </div>
+                          )}
+                      </div>
+
+                      {/* Reward Badge */}
+                      <div className={`absolute -top-4 -right-4 ${theme.button} text-white size-20 rounded-full flex flex-col items-center justify-center border-4 border-white dark:border-gray-800 shadow-lg animate-float`}>
+                          <span className="material-symbols-outlined text-2xl mb-[-2px]">star</span>
+                          <span className="text-[8px] font-black uppercase tracking-wide">New!</span>
+                      </div>
+                  </div>
+
+                  <div className="text-center mb-8">
+                      <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-1">{rewardItem.name}</h2>
+                      <p className={`text-xs font-bold uppercase tracking-widest ${theme.textAccent}`}>{rewardItem.type} Unlocked</p>
+                  </div>
+
+                  {/* Toggle Controls */}
+                  <div className="flex items-center bg-white dark:bg-black/30 p-1.5 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm mb-6 w-full max-w-[280px]">
+                      <button 
+                        onClick={() => setIsEquipped(true)}
+                        className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${isEquipped ? `${theme.button} text-white shadow-md` : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                      >
+                          Equip Now
+                      </button>
+                      <button 
+                        onClick={() => setIsEquipped(false)}
+                        className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all ${!isEquipped ? 'bg-gray-200 dark:bg-white/20 text-gray-600 dark:text-white shadow-inner' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                      >
+                          Unequip
+                      </button>
+                  </div>
+
+              </div>
+          )}
+
+      </div>
+
+      {/* Footer Actions */}
+      <div className="p-6 bg-white/50 dark:bg-black/20 backdrop-blur-lg border-t border-white/20 dark:border-white/5 z-20">
+          {viewState === 'initial' ? (
+              <div className="flex gap-4">
+                  <button 
+                    onClick={() => onNavigate(Screen.HOME)}
+                    className="flex-1 py-4 rounded-2xl bg-white dark:bg-white/10 text-gray-500 dark:text-gray-300 font-bold uppercase tracking-wider text-xs hover:bg-gray-50 dark:hover:bg-white/20 transition-colors"
+                  >
+                      Later
+                  </button>
+                  <button 
+                    onClick={handleCollect}
+                    className={`flex-[2] py-4 rounded-2xl ${theme.button} text-white font-black uppercase tracking-widest text-sm shadow-xl flex items-center justify-center gap-2 group transition-all active:scale-[0.98]`}
+                  >
+                      <span className="material-symbols-outlined filled group-hover:rotate-12 transition-transform">redeem</span>
+                      Collect Reward
+                  </button>
+              </div>
+          ) : viewState === 'decision' ? (
+              <button 
+                onClick={handleConfirm}
+                className="w-full py-4 rounded-2xl bg-green-500 text-white font-black uppercase tracking-widest text-sm shadow-xl shadow-green-500/30 hover:bg-green-400 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                  <span className="material-symbols-outlined">check_circle</span>
+                  {isEquipped ? 'Confirm & Wear' : 'Stash in Locker'}
+              </button>
+          ) : (
+              <div className="h-[56px]"></div> // Spacer during animation
           )}
       </div>
 
-      {/* Main Character Display */}
-      <div className="relative z-10 flex flex-col items-center gap-8">
-          
-          <div className={`relative transition-all duration-700 ${stage === 'reveal' ? 'scale-110' : 'scale-100'}`}>
-              {/* Spotlight */}
-              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-40 h-10 bg-black/20 blur-xl rounded-full"></div>
-              
-              {/* Character */}
-              <div 
-                className={`w-64 h-64 bg-contain bg-center bg-no-repeat drop-shadow-2xl transition-all duration-500 ${stage === 'intro' ? '' : getAnimationClass()}`}
-                style={{ backgroundImage: `url("${activeCharacter.image}")` }}
-              ></div>
-
-              {/* Reward Icon Popup */}
-              <div className={`absolute -top-10 -right-10 bg-white dark:bg-gray-800 p-4 rounded-[2rem] shadow-2xl border-4 border-light-primary dark:border-dark-primary flex items-center justify-center transition-all duration-500 transform ${stage === 'intro' ? 'scale-0 opacity-0 translate-y-10' : 'scale-100 opacity-100 translate-y-0 rotate-12'}`}>
-                  <span className="material-symbols-outlined text-5xl text-light-primary dark:text-dark-primary">eyeglasses</span>
-              </div>
-          </div>
-
-          <div className="text-center px-6">
-              <h2 className={`text-3xl font-black text-light-text dark:text-white uppercase tracking-tight mb-2 transition-all duration-500 ${stage === 'intro' ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-                  {stage === 'intro' ? 'Processing...' : 'Reward Unlocked!'}
-              </h2>
-              <p className={`text-sm font-bold text-gray-500 dark:text-gray-400 transition-all duration-500 delay-100 ${stage === 'intro' ? 'opacity-0' : 'opacity-100'}`}>
-                  You earned <span className="text-light-primary dark:text-dark-primary">Aviator Shades</span>
-              </p>
-          </div>
-
-          {/* Action Buttons */}
-          <div className={`flex flex-col gap-3 w-full max-w-xs transition-all duration-500 delay-300 ${stage === 'finished' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-              <button 
-                onClick={() => onNavigate(Screen.WARDROBE)}
-                className="w-full py-4 bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-bg rounded-xl font-black uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                  <span className="material-symbols-outlined filled">checkroom</span>
-                  Equip Now
-              </button>
-              <button 
-                onClick={() => onNavigate(Screen.ACHIEVEMENTS)}
-                className="w-full py-4 bg-white dark:bg-white/10 text-gray-500 dark:text-gray-300 rounded-xl font-bold uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-white/20 transition-all"
-              >
-                  Later
-              </button>
-          </div>
-      </div>
-
       <style>{`
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(-3deg); }
-            50% { transform: rotate(3deg); }
+        @keyframes bounce-in {
+            0% { transform: translate(-50%, -100%) scale(0); opacity: 0; }
+            60% { transform: translate(-50%, 10%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
         }
-        .animate-wiggle {
-            animation: wiggle 1s ease-in-out infinite;
+        .animate-bounce-in {
+            animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
       `}</style>
     </div>

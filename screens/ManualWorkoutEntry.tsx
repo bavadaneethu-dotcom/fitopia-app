@@ -34,62 +34,50 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-gray-900 font-sans text-white animate-fade-in">
-       {/* Background Grid */}
-       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
-       <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-blue-900/40 to-transparent pointer-events-none"></div>
-
-      {/* Header */}
-      <div className="relative z-10 flex items-center justify-between p-6">
+    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-light-bg dark:bg-dark-bg font-sans animate-fade-in transition-colors duration-300">
+      
+      {/* Uniform Header */}
+      <div className="flex items-center px-8 pt-10 pb-4 justify-between z-20 sticky top-0 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-md">
+        <div className="flex flex-col">
+            <h2 className="text-2xl font-black leading-none text-gray-800 dark:text-white uppercase tracking-tighter italic transform -skew-x-6">TRAINING</h2>
+            <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mt-1">Academy Briefing</span>
+        </div>
         <button 
           onClick={() => onNavigate(Screen.HOME)}
-          className="size-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-colors border border-white/10"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-90 shadow-sm border border-white dark:border-white/5"
         >
-          <span className="material-symbols-outlined text-white">arrow_back</span>
+          <span className="material-symbols-outlined text-gray-600 dark:text-white text-2xl font-bold">close</span>
         </button>
-        <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-[10px] font-black uppercase tracking-widest text-blue-300">
-             <span className="size-1.5 bg-blue-400 rounded-full animate-pulse"></span>
-             Academy Uplink
-        </div>
-        <div className="size-12"></div>
       </div>
 
-      <div className="flex-1 flex flex-col px-6 pt-4 gap-8 relative z-10 overflow-y-auto no-scrollbar pb-20">
-        <div className="text-center space-y-2 flex-shrink-0">
-            <h2 className="text-3xl font-black text-white tracking-tight uppercase italic transform -skew-x-6">Mission Briefing</h2>
-            <p className="text-gray-400 text-sm font-bold uppercase tracking-wide">Configure training parameters.</p>
-        </div>
-
-        {/* Input Card */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-[2rem] p-8 shadow-2xl border border-white/10 space-y-8 relative overflow-hidden flex-shrink-0">
-            {/* Decoration Bar */}
-            <div className="absolute top-0 left-0 w-2 h-full bg-yellow-400"></div>
+      <div className="flex-1 flex flex-col pt-4 gap-6 relative z-10 overflow-y-auto no-scrollbar pb-20 w-full px-6">
+        <div className="bg-light-surface dark:bg-dark-surface backdrop-blur-sm rounded-[2.5rem] p-6 shadow-xl border border-light-primary/10 dark:border-dark-primary/10 space-y-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-light-primary dark:bg-dark-primary"></div>
 
             <div className="space-y-3">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Operation Name</label>
+                <label className="text-xs font-black text-light-muted dark:text-dark-muted uppercase tracking-widest ml-1">Operation Name</label>
                 <div className="relative group">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-yellow-400 transition-colors">edit</span>
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-light-primary dark:group-focus-within:text-dark-primary transition-colors">edit</span>
                     <input 
                         type="text" 
                         value={activity}
                         onChange={(e) => setActivity(e.target.value)}
                         placeholder="e.g. Traffic Chase"
-                        className="w-full h-16 pl-12 pr-4 rounded-xl bg-black/40 border border-white/10 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 text-lg font-bold text-white placeholder:text-gray-600 outline-none transition-all uppercase tracking-wide"
+                        className="w-full h-16 pl-12 pr-4 rounded-xl bg-white dark:bg-black/20 border-2 border-transparent focus:border-light-primary dark:focus:border-dark-primary text-lg font-bold text-light-text dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 outline-none transition-all uppercase tracking-wide shadow-inner"
                     />
                 </div>
 
-                {/* Sports Presets */}
                 <div className="pt-2">
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Standard Ops</p>
+                    <p className="text-[10px] font-black text-light-muted/70 dark:text-dark-muted/70 uppercase tracking-widest mb-2 ml-1">Standard Ops</p>
                     <div className="flex flex-wrap gap-2">
                         {sportsPresets.map((sport) => (
                             <button
                                 key={sport.name}
                                 onClick={() => setActivity(sport.name)}
-                                className={`px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wide border transition-all flex items-center gap-1.5 ${
+                                className={`px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wide border-2 transition-all flex items-center gap-1.5 ${
                                     activity === sport.name 
-                                    ? 'bg-yellow-400 text-black border-yellow-400 shadow-md transform skew-x-[-6deg]' 
-                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                                    ? 'bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-bg border-light-primary dark:border-dark-primary shadow-md transform -skew-x-3' 
+                                    : 'bg-white dark:bg-white/5 border-transparent hover:border-gray-200 dark:hover:border-white/10 text-gray-500 dark:text-gray-400'
                                 }`}
                             >
                                 <span className="text-sm">{sport.icon}</span>
@@ -101,25 +89,24 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
             </div>
 
             <div className="space-y-3">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Time Limit (Min)</label>
+                <label className="text-xs font-black text-light-muted dark:text-dark-muted uppercase tracking-widest ml-1">Time Limit (Min)</label>
                 <div className="relative group">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-yellow-400 transition-colors">timer</span>
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-light-primary dark:group-focus-within:text-dark-primary transition-colors">timer</span>
                     <input 
                         type="number" 
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
                         placeholder="30"
-                        className="w-full h-16 pl-12 pr-4 rounded-xl bg-black/40 border border-white/10 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 text-lg font-bold text-white placeholder:text-gray-600 outline-none transition-all"
+                        className="w-full h-16 pl-12 pr-4 rounded-xl bg-white dark:bg-black/20 border-2 border-transparent focus:border-light-primary dark:focus:border-dark-primary text-lg font-bold text-light-text dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 outline-none transition-all shadow-inner"
                     />
                 </div>
                 
-                {/* Preset Chips */}
                  <div className="flex gap-2 justify-start overflow-x-auto no-scrollbar pt-2">
                     {[10, 20, 30, 45, 60].map(min => (
                         <button 
                             key={min}
                             onClick={() => setDuration(min.toString())}
-                            className={`px-4 py-2 rounded-lg text-xs font-black border transition-all ${duration === min.toString() ? 'bg-yellow-400 text-black border-yellow-400' : 'bg-transparent border-white/20 text-gray-400 hover:border-white/40'}`}
+                            className={`px-4 py-2 rounded-lg text-xs font-black border-2 transition-all ${duration === min.toString() ? 'bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-bg border-light-primary dark:border-dark-primary' : 'bg-transparent border-gray-200 dark:border-white/10 text-gray-400 hover:border-gray-300 dark:hover:border-white/20'}`}
                         >
                             {min}
                         </button>
@@ -128,22 +115,27 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
             </div>
         </div>
 
-        {/* Start Button */}
-        <div className="mt-auto">
+        {/* Uniform Rectangular Start Button */}
+        <div className="mt-auto pb-10">
             <button 
                 onClick={handleStart}
-                className="w-full h-24 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group relative overflow-hidden border-t border-white/20"
+                className="w-full h-16 rounded-[1.8rem] bg-[#FACC15] dark:bg-yellow-500 text-black font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-yellow-400/30 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] group relative overflow-hidden"
             >
-                <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.05)_10px,rgba(255,255,255,0.05)_20px)]"></div>
-                
-                <span className="material-symbols-outlined text-4xl filled relative z-10 group-hover:animate-ping">play_arrow</span>
-                <div className="flex flex-col items-start relative z-10">
-                    <span className="text-2xl font-black uppercase tracking-widest italic leading-none">Start Mission</span>
-                    <span className="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em]">Initiate Sequence</span>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shine"></div>
+                <span className="material-symbols-outlined text-2xl filled">play_arrow</span>
+                START MISSION
             </button>
         </div>
       </div>
+      <style>{`
+        @keyframes shine {
+            0% { transform: translateX(-200%) skewX(-12deg); }
+            20%, 100% { transform: translateX(200%) skewX(-12deg); }
+        }
+        .animate-shine {
+            animation: shine 3s infinite ease-in-out;
+        }
+      `}</style>
     </div>
   );
 };

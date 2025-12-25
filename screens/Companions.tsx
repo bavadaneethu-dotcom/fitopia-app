@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Character } from '../types';
 import { CHARACTERS } from '../App';
@@ -13,8 +14,18 @@ const Companions: React.FC<CompanionsProps> = ({ activeCharacter, setActiveChara
   const characters = CHARACTERS;
 
   return (
-    <div className="flex flex-col h-full animate-fade-in pb-10">
-      <div className="px-6 text-center pt-2 pb-6">
+    <div className="flex flex-col h-full animate-fade-in pb-10 relative">
+      {/* Close Button Header */}
+      <div className="absolute top-0 right-0 p-6 z-30">
+        <button 
+          onClick={onBack}
+          className="size-10 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 dark:hover:bg-white/10 transition-colors text-light-text dark:text-white"
+        >
+          <span className="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div className="px-6 text-center pt-8 pb-6 mt-8">
         <h2 className="text-3xl font-bold text-light-text dark:text-dark-text tracking-tight mb-2">Choose Partner</h2>
         <p className="text-light-muted dark:text-dark-muted">Select a companion to motivate your journey.</p>
       </div>

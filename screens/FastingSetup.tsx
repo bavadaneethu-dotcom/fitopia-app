@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
-import { Screen, Character } from '../types';
+import { Screen, Character, FastingPlanConfig } from '../types';
 
 interface FastingSetupProps {
   onNavigate: (screen: Screen) => void;
   activeCharacter?: Character;
+  setFastingPlan: (plan: FastingPlanConfig) => void;
 }
 
-const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter }) => {
-  const [activeTab, setActiveTab] = useState<'presets' | 'custom'>('custom'); // Default to custom to show the change
+const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter, setFastingPlan }) => {
+  const [activeTab, setActiveTab] = useState<'presets' | 'custom'>('presets'); 
   const [selectedPlanId, setSelectedPlanId] = useState<string>('16:8');
   const [customFastHours, setCustomFastHours] = useState<number>(14);
 
@@ -52,90 +54,110 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (customFastHours / 24) * circumference;
 
+  const handleNext = () => {
+    // Construct plan object
+    let plan: FastingPlanConfig;
+    if (activeTab === 'presets') {
+        const p = presets.find(x => x.id === selectedPlanId);
+        if (p) {
+            plan = { protocol: p.title, fastingHours: p.hours, eatingHours: 24 - p.hours };
+        } else {
+            // Fallback
+            plan = { protocol: '16:8 Method', fastingHours: 16, eatingHours: 8 };
+        }
+    } else {
+        plan = { protocol: `Custom ${customFastHours}:${24-customFastHours}`, fastingHours: customFastHours, eatingHours: 24 - customFastHours };
+    }
+    
+    // Save to parent
+    setFastingPlan(plan);
+    onNavigate(Screen.PLAN_GENERATION);
+  };
+
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden pb-24 bg-light-bg dark:bg-dark-bg animate-fade-in">
-      {/* Top Bar */}
-      <div className="sticky top-0 z-50 flex items-center bg-light-bg/95 dark:bg-dark-bg/95 backdrop-blur-md p-4 pb-2 justify-between border-b border-gray-200/50 dark:border-white/5">
-        <button 
-          onClick={() => onNavigate(Screen.GOAL_SELECTION)}
-          className="text-light-text dark:text-white flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-        >
-          <span className="material-symbols-outlined">arrow_back</span>
-        </button>
-        <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10 text-light-text dark:text-white">Fasting Plan</h2>
+    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#1a1a1a] text-light-text dark:text-white font-sans transition-colors duration-300">
+      
+      {/* Header Section */}
+      <div className="flex flex-col items-center w-full pt-8 px-6 relative z-20 bg-white dark:bg-[#1a1a1a]">
+        <div className="w-full flex items-center justify-between mb-4">
+            <button 
+              onClick={() => onNavigate(Screen.GOAL_SELECTION)}
+              className="size-12 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+            >
+              <span className="material-symbols-outlined text-gray-800 dark:text-white text-xl">arrow_back</span>
+            </button>
+            
+            <div className="px-4 py-1.5">
+                <span className="text-[10px] font-black text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">Step 4 of 5</span>
+            </div>
+
+            <div className="size-12"></div> 
+        </div>
+
+        {/* Progress Bar */}
+        <div className="flex gap-2 mb-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+            <div className="h-1.5 w-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+            <div className="h-1.5 w-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+            <div className="h-1.5 w-8 rounded-full bg-yellow-400 shadow-sm"></div>
+            <div className="h-1.5 w-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+        </div>
       </div>
 
       {/* Content Scroll Area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar w-full">
+      <div className="flex-1 overflow-y-auto no-scrollbar w-full pb-36 px-6 pt-4">
         
+        {/* Headline */}
+        <h1 className="text-[34px] font-black text-center text-[#4A4A4A] dark:text-white leading-[0.95] tracking-tight mb-6">
+            Set your <br/> <span className="text-[#6D5D4B] dark:text-gray-400">schedule</span>
+        </h1>
+
         {/* Character Quote */}
-        <div className="p-4 w-full">
-          <div className="relative flex flex-col items-stretch justify-start rounded-2xl shadow-sm bg-white dark:bg-dark-surface overflow-hidden border border-gray-100 dark:border-white/5">
-            <div className="flex flex-row items-center p-4 gap-4">
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-light-primary dark:border-dark-primary shadow-sm bg-gray-100 dark:bg-gray-700">
-                <div className="h-full w-full bg-center bg-cover bg-top" style={{ backgroundImage: `url("${activeCharacter?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCd6NqGRVIknZoTfMn2uv9BcIuIbBTjxgKnkAngUlsVxWoLOVTRSP63A1qz5p7ZBoNlXcVxEd964X81sNrwueXgsctT9GVOQT1zNt7ZXyhjpmwouzmAIVD3hnHlNKoboNZrdImKjGa24yw1jXprfgAWmxDCB2riA-S00bKSLXUjYoJs6c2EO4JKP-N6tXNraA74ATLGZsebP2JsJaUB5NL6cyFEDCBG7aL7UC13ifFG73FykDYZgj469zfKSTjaahfQZHMxUlv0nvuz'}")` }}></div>
-              </div>
-              <div className="flex flex-col gap-2 flex-1">
-                <div className="relative bg-light-surface dark:bg-black/20 p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl text-sm font-bold text-light-text dark:text-dark-text italic border border-light-primary/10 dark:border-dark-primary/10">
-                  <span className="absolute -left-2 top-0 block h-0 w-0 border-t-[10px] border-r-[10px] border-b-0 border-l-0 border-transparent border-r-light-surface dark:border-r-black/20"></span>
-                  "{activeCharacter?.onboardingMessages.fasting || "Discipline! That is what this is about. Set your timer."}"
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="flex gap-4 bg-[#F9F9F9] dark:bg-white/5 p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm mb-6">
+             <div className="size-10 rounded-full bg-cover bg-top border-2 border-yellow-400 shrink-0" style={{ backgroundImage: `url("${activeCharacter?.image}")` }}></div>
+             <p className="text-sm font-bold leading-relaxed text-gray-600 dark:text-gray-300 italic">
+               "{activeCharacter?.onboardingMessages.fasting || "Discipline! That is what this is about. Set your timer."}"
+             </p>
         </div>
 
         {/* Tab Toggle */}
-        <div className="px-4 py-2">
-          <div className="relative flex h-12 w-full items-center rounded-xl bg-gray-200 dark:bg-gray-800 p-1">
-            {/* Sliding Background */}
+        <div className="mb-6">
+          <div className="relative flex h-12 w-full items-center rounded-xl bg-gray-100 dark:bg-white/10 p-1">
             <div 
-              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-white dark:bg-dark-surface shadow-sm transition-all duration-300 ease-in-out ${activeTab === 'presets' ? 'left-1' : 'left-[calc(50%+4px)]'}`}
+              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-white dark:bg-black/40 shadow-sm transition-all duration-300 ease-in-out ${activeTab === 'presets' ? 'left-1' : 'left-[calc(50%+4px)]'}`}
             ></div>
-
             <button 
               onClick={() => setActiveTab('presets')}
-              className={`flex-1 relative z-10 text-sm font-bold leading-normal tracking-wide transition-colors duration-300 ${activeTab === 'presets' ? 'text-light-text dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+              className={`flex-1 relative z-10 text-xs font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'presets' ? 'text-black dark:text-white' : 'text-gray-400'}`}
             >
               Presets
             </button>
             <button 
               onClick={() => setActiveTab('custom')}
-              className={`flex-1 relative z-10 text-sm font-bold leading-normal tracking-wide transition-colors duration-300 ${activeTab === 'custom' ? 'text-light-text dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+              className={`flex-1 relative z-10 text-xs font-black uppercase tracking-wider transition-colors duration-300 ${activeTab === 'custom' ? 'text-black dark:text-white' : 'text-gray-400'}`}
             >
               Custom
             </button>
           </div>
         </div>
 
-        {/* Dynamic Content */}
-        <div className="px-4 pt-4 pb-2">
-          <h3 className="text-xl font-bold leading-tight tracking-tight text-light-text dark:text-white">
-            {activeTab === 'presets' ? 'Choose Your Fast' : 'Design Your Fast'}
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {activeTab === 'presets' ? 'Select a schedule that fits your lifestyle.' : 'Adjust the fasting window to your preference.'}
-          </p>
-        </div>
-
         {/* Content Container */}
-        <div className="flex flex-col gap-3 px-4 pb-8 min-h-[300px]">
+        <div className="flex flex-col gap-3 min-h-[300px]">
           {activeTab === 'presets' ? (
-            // PRESETS LIST
             presets.map((plan) => {
               const isSelected = selectedPlanId === plan.id;
               return (
                 <div 
                   key={plan.id}
                   onClick={() => setSelectedPlanId(plan.id)}
-                  className={`relative cursor-pointer rounded-xl p-4 transition-all duration-200 ${
+                  className={`relative cursor-pointer rounded-2xl p-4 transition-all duration-200 border-2 ${
                     isSelected 
-                      ? 'bg-white dark:bg-dark-surface border-2 border-light-primary dark:border-dark-primary shadow-md z-10' 
-                      : 'bg-white dark:bg-dark-surface border-2 border-transparent hover:border-gray-200 dark:hover:border-white/10 shadow-sm'
+                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 shadow-md scale-[1.02]' 
+                      : 'bg-white dark:bg-white/5 border-transparent hover:bg-gray-50 dark:hover:bg-white/10'
                   }`}
                 >
                   {plan.isPopular && (
-                    <div className="absolute -top-3 left-4 bg-light-primary dark:bg-dark-primary text-black dark:text-dark-bg text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-20">
+                    <div className="absolute -top-3 left-4 bg-yellow-400 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm z-20">
                       Most Popular
                     </div>
                   )}
@@ -147,28 +169,26 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
                           {plan.tag}
                         </span>
                       </div>
-                      <p className={`text-base font-bold leading-tight mt-1 ${isSelected && plan.isPopular ? 'text-light-primary dark:text-dark-primary' : 'text-light-text dark:text-white'}`}>
+                      <p className={`text-base font-black leading-tight mt-1 ${isSelected ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                         {plan.title}
                       </p>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs font-normal leading-normal">
+                      <p className="text-gray-500 dark:text-gray-400 text-xs font-medium leading-normal">
                         {plan.desc}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fast</span>
-                        <span className={`block text-lg font-black ${isSelected && plan.isPopular ? 'text-light-primary dark:text-dark-primary' : 'text-light-text dark:text-white'}`}>
+                        <span className={`block text-xl font-black ${isSelected ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-800 dark:text-white'}`}>
                           {plan.hours}h
                         </span>
                       </div>
-                      <div className={`size-6 rounded-full flex items-center justify-center transition-all ${
+                      <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
                         isSelected 
-                          ? 'text-light-primary dark:text-dark-primary scale-110' 
-                          : 'text-gray-300 scale-100'
+                          ? 'border-yellow-400 bg-yellow-400' 
+                          : 'border-gray-300 dark:border-gray-600'
                       }`}>
-                         <span className={`material-symbols-outlined text-2xl ${isSelected ? 'filled' : ''}`} style={{ fontVariationSettings: isSelected ? "'FILL' 1" : "'FILL' 0" }}>
-                           {isSelected ? 'check_circle' : 'circle'}
-                         </span>
+                         {isSelected && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
                       </div>
                     </div>
                   </div>
@@ -176,23 +196,11 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
               );
             })
           ) : (
-            // CUSTOM PAGE
-            <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-white/5 animate-fade-in">
+            <div className="bg-white dark:bg-white/5 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-white/5">
               <div className="flex flex-col items-center justify-center py-6">
-                {/* Circular Slider Visualization */}
+                {/* Circular Slider */}
                 <div className="relative size-64 flex items-center justify-center mb-8">
-                  {/* Background Track */}
                   <svg className="size-full transform -rotate-90 overflow-visible" viewBox="0 0 200 200">
-                    <defs>
-                      <linearGradient id="trackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#E5E7EB" />
-                        <stop offset="100%" stopColor="#E5E7EB" />
-                      </linearGradient>
-                      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="4" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
-                    </defs>
                     <circle 
                       className="text-gray-100 dark:text-gray-800 stroke-current" 
                       cx="100" cy="100" 
@@ -201,9 +209,8 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
                       strokeWidth="20" 
                       strokeLinecap="round" 
                     />
-                    {/* Active Track */}
                     <circle 
-                      className="text-light-primary dark:text-dark-primary stroke-current transition-all duration-700 ease-out" 
+                      className="text-yellow-400 stroke-current transition-all duration-700 ease-out" 
                       cx="100" cy="100" 
                       fill="transparent" 
                       r={radius} 
@@ -211,11 +218,10 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
                       strokeDasharray={circumference} 
                       strokeDashoffset={strokeDashoffset} 
                       strokeLinecap="round" 
-                      style={{ filter: 'drop-shadow(0px 2px 4px rgba(250, 204, 21, 0.4))' }}
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-6xl font-black text-light-text dark:text-white tracking-tighter animate-fade-in-up">{customFastHours}</span>
+                    <span className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">{customFastHours}</span>
                     <span className="text-xs font-black text-gray-400 uppercase tracking-widest mt-1">Hours</span>
                   </div>
                 </div>
@@ -229,7 +235,7 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
                     step="1"
                     value={customFastHours}
                     onChange={(e) => setCustomFastHours(parseInt(e.target.value))}
-                    className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-light-primary dark:accent-dark-primary hover:accent-yellow-500 transition-all focus:outline-none focus:ring-4 focus:ring-light-primary/20"
+                    className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer accent-yellow-400"
                   />
                   <div className="flex justify-between mt-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                     <span>12h</span>
@@ -238,15 +244,14 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
                   </div>
                 </div>
 
-                {/* Info Cards */}
                 <div className="grid grid-cols-2 gap-3 w-full">
-                  <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-white/5 flex flex-col items-start gap-1">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fasting Window</p>
-                    <p className="text-light-text dark:text-white font-black text-lg">{customFastHours} Hours</p>
+                  <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex flex-col items-center">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Fasting</p>
+                    <p className="text-gray-900 dark:text-white font-black text-lg">{customFastHours}h</p>
                   </div>
-                  <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-white/5 flex flex-col items-start gap-1">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Eating Window</p>
-                    <p className="text-light-text dark:text-white font-black text-lg">{24 - customFastHours} Hours</p>
+                  <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex flex-col items-center">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Eating</p>
+                    <p className="text-gray-900 dark:text-white font-black text-lg">{24 - customFastHours}h</p>
                   </div>
                 </div>
               </div>
@@ -255,14 +260,15 @@ const FastingSetup: React.FC<FastingSetupProps> = ({ onNavigate, activeCharacter
         </div>
       </div>
 
-      {/* Sticky Bottom Button */}
-      <div className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-light-bg via-light-bg to-transparent dark:from-dark-bg dark:via-dark-bg z-20">
+      {/* Footer CTA */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] z-30 pt-16">
         <button 
-          onClick={() => onNavigate(Screen.PLAN_GENERATION)}
-          className="w-full h-14 rounded-full bg-light-primary dark:bg-dark-primary hover:brightness-105 text-light-text dark:text-dark-bg text-lg font-black flex items-center justify-center gap-2 shadow-lg shadow-light-primary/40 dark:shadow-dark-primary/40 transition-all active:scale-[0.98]"
+          onClick={handleNext}
+          className="flex w-full items-center justify-center rounded-full h-16 bg-[#FACC15] hover:bg-yellow-300 text-black font-black text-sm uppercase tracking-widest shadow-xl shadow-yellow-400/20 active:scale-[0.98] transition-all gap-3"
         >
-          <span className="material-symbols-outlined filled" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-          Start Fasting
+          <span className="material-symbols-outlined text-xl filled">timelapse</span>
+          Set Schedule
+          <span className="material-symbols-outlined text-xl">arrow_forward</span>
         </button>
       </div>
     </div>

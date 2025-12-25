@@ -1,258 +1,307 @@
 
-import React from 'react';
-import { FoodLogItem, ActivityLog, Screen } from '../types';
+import React, { useState } from 'react';
+import { FoodLogItem, ActivityLog, WaterLogItem, FastingLog, Screen } from '../types';
 
 interface AnalyticsProps {
   foodLogs: FoodLogItem[];
   workoutLogs: ActivityLog[];
   meditationLogs: ActivityLog[];
+  waterLogs: WaterLogItem[];
+  fastingLogs: FastingLog[];
   onNavigate: (screen: Screen) => void;
+  onUpdateWorkout: (log: ActivityLog) => void;
+  onUpdateMeditation: (log: ActivityLog) => void;
+  onDeleteWorkout: (id: string) => void;
+  onDeleteMeditation: (id: string) => void;
+  dailyCalorieLimit: number;
 }
 
-const Analytics: React.FC<AnalyticsProps> = ({ foodLogs, workoutLogs, meditationLogs, onNavigate }) => {
-  const dailyCalorieLimit = 2200;
+const Analytics: React.FC<AnalyticsProps> = ({ 
+    foodLogs, workoutLogs, meditationLogs, waterLogs, fastingLogs,
+    onNavigate, dailyCalorieLimit 
+}) => {
+  const [selectedFood, setSelectedFood] = useState<FoodLogItem | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<{log: ActivityLog, type: 'workout' | 'meditation'} | null>(null);
+
   const currentCalories = foodLogs.reduce((acc, item) => acc + item.calories, 0);
   const remainingCalories = Math.max(0, dailyCalorieLimit - currentCalories);
   const progressPercent = Math.min((currentCalories / dailyCalorieLimit) * 100, 100);
 
-  // Calculate Macros
-  const totalProtein = foodLogs.reduce((acc, item) => acc + (item.macros?.protein || 0), 0);
-  const totalCarbs = foodLogs.reduce((acc, item) => acc + (item.macros?.carbs || 0), 0);
-  const totalFat = foodLogs.reduce((acc, item) => acc + (item.macros?.fat || 0), 0);
+  const totalWater = waterLogs.reduce((acc, item) => acc + item.amount, 0);
+  const waterTarget = 2500;
 
-  // Targets (Mock targets)
-  const targetProtein = 150;
-  const targetCarbs = 250;
-  const targetFat = 70;
+  const getMicros = (item: FoodLogItem) => {
+    if (item.micros) return item.micros;
+    return {
+        vitA: '12%',
+        vitC: '30%',
+        calcium: '15%',
+        iron: '8%',
+        fiber: '5g',
+        sodium: '140mg',
+    };
+  };
 
   return (
-    <div className="flex flex-col gap-6 px-6 pt-2 animate-fade-in pb-10">
+    <div className="flex flex-col gap-6 px-6 pt-6 animate-fade-in pb-12 relative overflow-x-hidden">
       
-      {/* Top Banner - Character Feedback */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-light-surface dark:bg-dark-surface border border-light-primary/20 dark:border-dark-primary/20 p-5 shadow-sm group">
-        <div className="absolute top-0 right-0 bg-light-primary/10 dark:bg-dark-primary/10 px-3 py-1 rounded-bl-xl">
-             <span className="text-[9px] font-bold uppercase tracking-widest text-light-primary dark:text-dark-primary">Case Update</span>
-        </div>
-        <div className="flex gap-4 items-start relative z-10 pt-2">
-          <div className="relative shrink-0">
-            <div className="size-14 rounded-xl bg-cover bg-center border-2 border-white dark:border-gray-600 shadow-md transform -rotate-3 group-hover:rotate-0 transition-transform duration-300" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD_hKVdvi_hN5TeA1YCgL3QHscmGS2anT0qakyn4nbToja03M9nTthocwJk1wTZzBlGeQcmLMVhCUiYGKPD7sCJcH_wg4hKQrzn5Yp3qwFyjHgh5oN_Cp6HQbUWmzjMFoZPEvbc5C6kAp6tIuB586d3wHnVeIGkcrekZiIA6E2ZTcJAlaAoKGzh2TOGEMzsT0Z6dJa1Kza4zOcvDvMbg5B8_8CLNtLtMgEDOSinFexwCtMVyorX-wdgCfz-VkrAPP0tmLlkaHxlIb-V")' }}></div>
+      {/* Dim Background for detail modals */}
+      {(selectedFood || selectedActivity) && <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-fade-in" />}
+
+      {/* Stats Page Header */}
+      <div className="flex items-center justify-between px-2 mb-2">
+          <div className="flex flex-col">
+              <h2 className="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tighter italic">Stats Desk</h2>
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Confidential Records</span>
           </div>
-          <div className="flex flex-col gap-1">
-            <p className="text-sm leading-relaxed text-light-text dark:text-dark-text font-medium italic">
-              "Great hustle! You're <span className="font-bold text-light-primary dark:text-dark-primary bg-light-primary/10 dark:bg-dark-primary/10 px-1 rounded">{Math.max(0, targetProtein - Math.round(totalProtein))}g</span> of protein away from closing this case. Let's grab a snack! 🥕"
-            </p>
-            <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wide">— Officer Hopps</p>
-          </div>
-        </div>
       </div>
 
-      {/* Calories Card - Case File Style */}
-      <div className="bg-[#fdfbf7] dark:bg-[#1a202c] rounded-[2rem] p-6 shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 font-mono relative overflow-hidden transition-all duration-500">
-        <div className="absolute top-6 right-6 opacity-10 pointer-events-none">
-             <span className="material-symbols-outlined text-8xl text-black dark:text-white">folder</span>
-        </div>
-
-        <div className="flex items-center justify-between mb-6 relative z-10">
+      {/* Fuel Intake Header Card */}
+      <div className="bg-[#fdfbf7] dark:bg-dark-surface rounded-[2.5rem] p-8 shadow-sm border-2 border-dashed border-gray-200 dark:border-white/10 font-sans relative overflow-hidden transition-all duration-500">
+        <div className="flex items-center justify-between mb-8 relative z-10">
              <div>
-                 <h3 className="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Fuel Intake</h3>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Daily Limit: {dailyCalorieLimit}</p>
+                 <h3 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tighter italic">Fuel Intake</h3>
+                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">Daily Case Target: {dailyCalorieLimit} kcal</p>
              </div>
-             <div className="bg-gray-800 dark:bg-white text-white dark:text-gray-900 px-3 py-1 rounded text-xs font-bold uppercase tracking-wide">
-                 In Progress
-             </div>
+             <div className="bg-[#1e293b] text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] shadow-lg">Verified</div>
         </div>
 
-        <div className="flex items-end gap-2 mb-4 relative z-10">
-            <span className="text-6xl font-black text-light-text dark:text-white tracking-tighter leading-none transition-all duration-700">{currentCalories}</span>
-            <span className="text-sm font-bold text-gray-400 mb-1.5 uppercase">kcal</span>
+        <div className="flex items-baseline gap-2 mb-6 relative z-10">
+            <span className="text-7xl font-black text-[#422006] dark:text-white tracking-tighter leading-none">{currentCalories}</span>
+            <span className="text-sm font-black text-gray-400 uppercase tracking-widest">KCAL</span>
         </div>
 
-        <div className="relative h-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-6 border border-black/5 dark:border-white/5 z-10">
-             {/* Striped progress bar pattern */}
-            <div className="absolute top-0 left-0 h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 z-20"></div>
-            <div 
-                className="absolute top-0 left-0 h-full bg-yellow-400 dark:bg-yellow-500 transition-all duration-1000 ease-out flex items-center justify-end pr-2" 
-                style={{ width: `${progressPercent}%` }}
-            >
-                <div className="h-full w-2 bg-white/30"></div>
+        <div className="relative h-6 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden mb-8 z-10 shadow-inner">
+            <div className="absolute top-0 left-0 h-full bg-yellow-400 transition-all duration-1000 ease-out" style={{ width: `${progressPercent}%` }}>
+                <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
             </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 relative z-10">
-            <div className="bg-white dark:bg-white/5 p-3 rounded-xl border border-gray-100 dark:border-white/10">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Consumed</span>
-                <span className="text-xl font-black text-gray-800 dark:text-white">{currentCalories}</span>
+            <div className="bg-white dark:bg-white/5 p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-1">Total Consumed</span>
+                <span className="text-3xl font-black text-[#422006] dark:text-white">{currentCalories}</span>
             </div>
-            <div className="bg-white dark:bg-white/5 p-3 rounded-xl border border-gray-100 dark:border-white/10">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Remaining</span>
-                <span className="text-xl font-black text-gray-800 dark:text-white">{remainingCalories}</span>
+            <div className="bg-white dark:bg-white/5 p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-1">Fuel Remaining</span>
+                <span className="text-3xl font-black text-[#422006] dark:text-white">{remainingCalories}</span>
             </div>
         </div>
       </div>
 
-      {/* Macros Grid */}
-      <div>
-        <div className="flex items-center gap-2 mb-3 px-2">
-            <span className="size-2 bg-yellow-400 dark:bg-yellow-500 rounded-full"></span>
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Chemical Analysis</h2>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-3">
-          <MacroCard label="Protein" current={Math.round(totalProtein)} total={targetProtein} color="text-yellow-400" />
-          <MacroCard label="Carbs" current={Math.round(totalCarbs)} total={targetCarbs} color="text-blue-400" />
-          <MacroCard label="Fat" current={Math.round(totalFat)} total={targetFat} color="text-orange-400" />
-        </div>
+      {/* Summary Grid */}
+      <div className="grid grid-cols-2 gap-4">
+          <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-[2rem] border border-blue-100 dark:border-blue-900/30 flex flex-col gap-1 relative overflow-hidden">
+              <span className="text-[9px] font-black text-blue-400 dark:text-blue-500 uppercase tracking-widest z-10">Hydration</span>
+              <div className="flex items-baseline gap-1 z-10">
+                  <span className="text-3xl font-black text-blue-600 dark:text-blue-300">{totalWater}</span>
+                  <span className="text-[10px] font-bold text-blue-400">ml</span>
+              </div>
+              <div className="w-full bg-blue-200 dark:bg-blue-900/50 h-1.5 rounded-full mt-2 overflow-hidden z-10">
+                  <div className="h-full bg-blue-500" style={{ width: `${Math.min((totalWater/waterTarget)*100, 100)}%` }}></div>
+              </div>
+          </div>
+          <div className="bg-indigo-50 dark:bg-indigo-900/10 p-5 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/30 flex flex-col gap-1 relative overflow-hidden">
+              <span className="text-[9px] font-black text-indigo-400 dark:text-indigo-500 uppercase tracking-widest z-10">Patrols</span>
+              <div className="flex items-baseline gap-1 z-10">
+                  <span className="text-3xl font-black text-indigo-600 dark:text-indigo-300">{fastingLogs.length}</span>
+                  <span className="text-[10px] font-bold text-indigo-400">shifts</span>
+              </div>
+              <div className="flex gap-1 mt-2 z-10">
+                  {fastingLogs.slice(0, 5).map((_, i) => <div key={i} className="size-1.5 rounded-full bg-indigo-500"></div>)}
+                  {fastingLogs.length === 0 && <span className="text-[9px] font-bold text-indigo-300 uppercase italic">Standby...</span>}
+              </div>
+          </div>
       </div>
 
-      {/* Recent Evidence (Meals) */}
-      <div>
-        <div className="flex justify-between items-center mb-3 px-2">
-           <div className="flex items-center gap-2">
-                <span className="size-2 bg-yellow-400 dark:bg-yellow-500 rounded-full"></span>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Evidence Log (Food)</h2>
-            </div>
-        </div>
-        
-        {foodLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl opacity-60">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">No evidence collected</p>
-            </div>
-        ) : (
-            <div className="flex flex-col gap-3">
-                {foodLogs.slice(0, 3).map((item, idx) => (
-                    <div key={idx} className="flex gap-4 items-start p-3 bg-white dark:bg-white/5 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-                        <div className="size-16 rounded-xl bg-gray-100 dark:bg-white/10 shrink-0 overflow-hidden shadow-inner flex items-center justify-center text-3xl">
-                            {item.icon}
-                        </div>
-                        <div className="flex-1 min-w-0 py-1">
-                            <div className="flex justify-between items-start">
-                                <h4 className="font-bold text-light-text dark:text-dark-text truncate pr-2 text-sm">{item.name}</h4>
-                                <span className="text-xs font-black text-yellow-500 dark:text-yellow-400 whitespace-nowrap">{item.calories} kcal</span>
-                            </div>
-                            <div className="flex gap-2 mt-2">
-                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 uppercase tracking-wide border border-gray-200 dark:border-white/5">{item.timestamp}</span>
-                                {item.displayAmount && <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 uppercase tracking-wide border border-gray-200 dark:border-white/5">{item.displayAmount}</span>}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
+      {/* Main Evidence Sections */}
+      <div className="space-y-8 mt-4">
+          <section>
+              <div className="flex items-center gap-2 px-2 mb-3">
+                   <div className="size-2.5 rounded-full bg-orange-400"></div>
+                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Fuel Files (Food)</h3>
+              </div>
+              <div className="flex flex-col gap-3">
+                  {foodLogs.length === 0 ? <EmptyState label="No fuel files recorded" icon="no_meals" /> : foodLogs.map((item) => (
+                      <LogItem key={item.id} icon={item.icon} title={item.name} subtitle={`${item.timestamp} • ${item.displayAmount}`} value={item.calories} unit="kcal" onClick={() => setSelectedFood(item)} />
+                  ))}
+              </div>
+          </section>
+
+          <section>
+              <div className="flex items-center gap-2 px-2 mb-3">
+                   <div className="size-2.5 rounded-full bg-teal-400"></div>
+                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Mindfulness Oasis</h3>
+              </div>
+              <div className="flex flex-col gap-3">
+                  {meditationLogs.length === 0 ? <EmptyState label="No oasis sessions" icon="self_improvement" /> : meditationLogs.map((log) => (
+                      <LogItem 
+                        key={log.id} 
+                        icon={log.icon} 
+                        title={log.title} 
+                        subtitle={`${log.timestamp} • Session`} 
+                        value={parseInt(log.duration.split(':')[0])} 
+                        unit="min" 
+                        onClick={() => setSelectedActivity({log, type: 'meditation'})} 
+                        color="text-teal-600 dark:text-teal-400" 
+                      />
+                  ))}
+              </div>
+          </section>
+
+          <section>
+              <div className="flex items-center gap-2 px-2 mb-3">
+                   <div className="size-2.5 rounded-full bg-red-400"></div>
+                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Academy Training</h3>
+              </div>
+              <div className="flex flex-col gap-3">
+                  {workoutLogs.length === 0 ? <EmptyState label="No academy training" icon="fitness_center" /> : workoutLogs.map((log) => (
+                      <LogItem 
+                        key={log.id} 
+                        icon={log.icon} 
+                        title={log.title} 
+                        subtitle={`${log.timestamp} • Drill`} 
+                        value={log.calories || parseInt(log.duration.split(':')[0]) * 5} 
+                        unit="kcal" 
+                        onClick={() => setSelectedActivity({log, type: 'workout'})} 
+                        color="text-red-600 dark:text-red-400" 
+                      />
+                  ))}
+              </div>
+          </section>
       </div>
 
-      {/* Workout Logs */}
-      <div>
-        <div className="flex justify-between items-center mb-3 px-2 pt-2">
-           <div className="flex items-center gap-2">
-                <span className="size-2 bg-orange-500 rounded-full"></span>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Training Log</h2>
-            </div>
-            <button 
-                onClick={() => onNavigate(Screen.WORKOUT_HISTORY)}
-                className="text-[10px] font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded uppercase tracking-wide hover:bg-orange-500/20 transition-colors"
-            >
-                View All
-            </button>
-        </div>
-        {workoutLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl opacity-60">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">No training missions</p>
-            </div>
-        ) : (
-            <div className="flex flex-col gap-3">
-                {workoutLogs.slice(0, 3).map((log, idx) => (
-                    <div key={log.id} className="flex items-center gap-3 p-3 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-                        <div className={`size-10 rounded-xl flex items-center justify-center text-xl shadow-inner ${log.color ? `bg-${log.color}-100 text-${log.color}-600 dark:bg-${log.color}-900/20 dark:text-${log.color}-300` : 'bg-orange-100 text-orange-600'}`}>
-                            {log.icon}
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="text-sm font-bold text-gray-800 dark:text-white leading-tight">{log.title}</h4>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{log.timestamp}</span>
-                                <span className="size-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{log.duration}</span>
-                            </div>
-                        </div>
-                        <div className="flex flex-col items-end">
-                            <span className="font-black text-gray-800 dark:text-white">{log.calories || '-'}</span>
-                            <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">kcal</span>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-      </div>
+      {/* Detailed Modals - Refined Case File theme consistent with FoodLog */}
+      {(selectedFood || selectedActivity) && (
+        <DetailModalPremium 
+            title={selectedFood?.name || selectedActivity?.log.title || ''}
+            icon={selectedFood?.icon || selectedActivity?.log.icon || ''}
+            kcal={selectedFood?.calories || selectedActivity?.log.calories || 0}
+            mass={selectedFood?.displayAmount || selectedActivity?.log.duration || '0'}
+            isActivity={!!selectedActivity}
+            macros={selectedFood ? selectedFood.macros : {
+                protein: selectedActivity?.type === 'workout' ? 15 : 5, 
+                carbs: selectedActivity?.type === 'workout' ? 10 : 25, 
+                fat: selectedActivity?.type === 'workout' ? 5 : 2
+            }}
+            micros={selectedFood ? getMicros(selectedFood) : {
+                intensity: selectedActivity?.type === 'workout' ? 'High' : 'Low',
+                focus: selectedActivity?.type === 'workout' ? '80%' : '95%',
+                discipline: '100%',
+                rank: 'Officer'
+            }}
+            onClose={() => { setSelectedFood(null); setSelectedActivity(null); }}
+        />
+      )}
 
-      {/* Mindfulness Logs */}
-      <div>
-        <div className="flex justify-between items-center mb-3 px-2 pt-2">
-           <div className="flex items-center gap-2">
-                <span className="size-2 bg-teal-500 rounded-full"></span>
-                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Mindfulness Log</h2>
-            </div>
-            <button 
-                onClick={() => onNavigate(Screen.MINDFULNESS_HISTORY)}
-                className="text-[10px] font-bold text-teal-500 bg-teal-500/10 px-2 py-1 rounded uppercase tracking-wide hover:bg-teal-500/20 transition-colors"
-            >
-                View All
-            </button>
-        </div>
-        {meditationLogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl opacity-60">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">No sessions recorded</p>
-            </div>
-        ) : (
-            <div className="flex flex-col gap-3">
-                {meditationLogs.slice(0, 3).map((log, idx) => (
-                    <div key={log.id} className="flex items-center gap-3 p-3 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-                        <div className="size-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xl shadow-inner">
-                            {log.icon}
-                        </div>
-                        <div className="flex-1">
-                            <h4 className="text-sm font-bold text-gray-800 dark:text-white leading-tight">{log.title}</h4>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{log.timestamp}</span>
-                        </div>
-                        <div className="bg-teal-50 dark:bg-teal-900/20 px-2.5 py-1 rounded-lg text-teal-700 dark:text-teal-300 text-xs font-black">
-                            {log.duration}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-      </div>
-
+      <style>{`
+          @keyframes modal-pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          .animate-modal-pop { animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      `}</style>
     </div>
   );
 };
 
-const MacroCard: React.FC<{ label: string; current: number; total: number; color: string }> = ({ label, current, total, color }) => {
-  const percent = Math.min((current / total) * 100, 100);
-  
-  return (
-    <div className="bg-light-surface dark:bg-dark-surface rounded-2xl p-4 flex flex-col items-center gap-3 border border-light-primary/10 dark:border-dark-primary/10 shadow-sm relative overflow-hidden transition-all duration-500 hover:scale-105">
-      <div className="relative size-16">
-        <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
-          <path className="text-gray-200 dark:text-gray-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3"></path>
-          <path 
-            className={`${color} transition-all duration-1000 ease-out`} 
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeDasharray={`${percent}, 100`} 
-            strokeLinecap="round" 
-            strokeWidth="3"
-          ></path>
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center flex-col">
-            <span className="text-[10px] font-black text-light-text dark:text-dark-text">{Math.round(percent)}%</span>
+const DetailModalPremium: React.FC<{ 
+    title: string; 
+    icon: string; 
+    kcal: number; 
+    mass: string; 
+    macros: any; 
+    micros: any; 
+    onClose: () => void;
+    isActivity?: boolean;
+}> = ({ title, icon, kcal, mass, macros, micros, onClose, isActivity }) => (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 animate-fade-in" onClick={onClose}>
+        <div className="bg-[#EFEFEF] dark:bg-[#1a1a1a] w-full max-h-[85vh] max-w-[340px] animate-modal-pop relative flex flex-col rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white dark:border-white/5" onClick={e => e.stopPropagation()}>
+            
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/notebook.png")' }}></div>
+
+            <div className="flex items-center justify-center pt-8 pb-4 relative">
+                <div className="bg-[#FEF08A] px-4 py-1.5 rounded-xl border border-yellow-300 shadow-sm flex items-center gap-1.5 transform -rotate-1">
+                    <div className="text-center">
+                        <p className="text-[7px] font-black uppercase text-yellow-700 tracking-tighter">IDENTIFIED</p>
+                        <p className="text-xs font-black text-gray-900 uppercase leading-none">VERIFIED</p>
+                    </div>
+                    <span className="material-symbols-outlined text-yellow-700 text-lg font-bold">verified_user</span>
+                </div>
+                <button 
+                    onClick={onClose} 
+                    className="absolute right-6 top-8 size-10 rounded-full bg-white/80 dark:bg-white/10 flex items-center justify-center transition-transform active:scale-90 shadow-sm"
+                >
+                    <span className="material-symbols-outlined font-black text-xl text-gray-400">close</span>
+                </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 pb-12 no-scrollbar">
+                <div className="flex flex-col items-center mt-2">
+                    <div className="size-32 rounded-[2.5rem] bg-gradient-to-br from-gray-200 to-white dark:from-white/10 flex items-center justify-center text-6xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] mb-6 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.8),transparent)] pointer-events-none"></div>
+                        <span className="relative z-10 drop-shadow-md">{icon}</span>
+                    </div>
+
+                    <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none mb-2 text-center">{title}</h3>
+                    
+                    <div className="flex items-center gap-2 mb-8">
+                        <span className="bg-white dark:bg-white/5 text-orange-600 dark:text-orange-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-orange-50 dark:border-white/10 shadow-sm">{kcal} {isActivity ? 'XP' : 'KCAL'}</span>
+                        <span className="bg-white dark:bg-white/5 text-gray-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100 dark:border-white/10 shadow-sm">{mass.toUpperCase()}</span>
+                    </div>
+
+                    <div className="w-full space-y-3 mb-8">
+                        <div className="flex items-center gap-3"><h4 className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Composition</h4><div className="h-px bg-gray-200 dark:bg-white/10 flex-1"></div></div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <MacroCardMini label={isActivity ? "Power" : "Protein"} val={`${macros.protein}${isActivity ? 'p' : 'g'}`} dotColor="bg-blue-600" textColor="text-blue-600" />
+                            <MacroCardMini label={isActivity ? "Focus" : "Carbs"} val={`${macros.carbs}${isActivity ? 'p' : 'g'}`} dotColor="bg-green-600" textColor="text-green-600" />
+                            <MacroCardMini label={isActivity ? "Calm" : "Fat"} val={`${macros.fat}${isActivity ? 'p' : 'g'}`} dotColor="bg-yellow-600" textColor="text-yellow-600" />
+                        </div>
+                    </div>
+
+                    <div className="w-full space-y-3">
+                        <div className="flex items-center gap-3"><h4 className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">{isActivity ? 'Performance' : 'Nutrients'}</h4><div className="h-px bg-gray-200 dark:bg-white/10 flex-1"></div></div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {Object.entries(micros).slice(0, 4).map(([key, value]) => (
+                                <div key={key} className="bg-white dark:bg-white/5 p-3 px-4 rounded-xl flex justify-between items-center border border-gray-50 dark:border-white/10 shadow-sm transition-all hover:border-gray-200">
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                                        {key.replace('vit', 'Vit ').replace('sodium', 'Sod').replace('fiber', 'Fib')}
+                                    </span>
+                                    <span className="text-xs font-black text-gray-800 dark:text-white capitalize">{value as string}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div className="text-center">
-        <p className="text-light-text dark:text-dark-text text-xs font-black uppercase tracking-wide">{label}</p>
-        <p className="text-[10px] text-light-muted dark:text-dark-muted mt-0.5 font-mono">{current}/{total}g</p>
-      </div>
     </div>
-  );
-};
+);
+
+const MacroCardMini: React.FC<{ label: string; val: string; dotColor: string; textColor: string }> = ({ label, val, dotColor, textColor }) => (
+    <div className="flex flex-col items-center gap-1.5 p-4 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm transition-transform hover:scale-105">
+        <div className={`size-2 rounded-full ${dotColor} shadow-[0_0_8px_currentColor]`}></div>
+        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{label}</span>
+        <span className={`text-[15px] font-black ${textColor} dark:text-white`}>{val}</span>
+    </div>
+);
+
+const LogItem: React.FC<{ icon: string; title: string; subtitle: string; value: number; unit: string; onClick: () => void; color?: string }> = ({ icon, title, subtitle, value, unit, onClick, color = "text-[#D97706] dark:text-yellow-400" }) => (
+    <button onClick={onClick} className="group flex items-center gap-4 p-5 bg-white dark:bg-dark-surface rounded-[1.8rem] border border-gray-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all hover:border-yellow-400 text-left">
+        <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="flex-1 min-w-0">
+            <h4 className="text-base font-black text-gray-800 dark:text-white uppercase tracking-tight truncate">{title}</h4>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{subtitle}</p>
+        </div>
+        <div className="text-right shrink-0">
+            <span className={`text-xl font-black ${color}`}>{value}</span>
+            <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest -mt-1">{unit}</span>
+        </div>
+    </button>
+);
+
+const EmptyState: React.FC<{ label: string; icon: string }> = ({ label, icon }) => (
+    <div className="bg-white/40 dark:bg-dark-surface/40 backdrop-blur-md rounded-[2rem] p-8 border-2 border-dashed border-gray-200 dark:border-white/5 text-center opacity-50">
+        <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">{icon}</span>
+        <p className="text-[10px] font-black uppercase tracking-widest">{label}</p>
+    </div>
+);
 
 export default Analytics;

@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Screen, Character, ActivityLog, FoodLogItem } from './types';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Screen, Character, ActivityLog, FoodLogItem, WaterLogItem, UserStats, FastingPlanConfig, FastingLog } from './types';
 import Home from './screens/Home';
 import Analytics from './screens/Analytics';
 import Achievements from './screens/Achievements';
@@ -9,12 +9,14 @@ import Companions from './screens/Companions';
 import Welcome from './screens/Welcome';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
+import ForgotPassword from './screens/ForgotPassword';
 import CharacterSelect from './screens/CharacterSelect';
 import UserData from './screens/UserData';
 import GoalSelection from './screens/GoalSelection';
 import FastingSetup from './screens/FastingSetup';
 import PlanGeneration from './screens/PlanGeneration';
 import FoodLog from './screens/FoodLog';
+import FoodHistory from './screens/FoodHistory';
 import WaterLog from './screens/WaterLog';
 import MeditationTimer from './screens/MeditationTimer';
 import WorkoutTimer from './screens/WorkoutTimer';
@@ -25,10 +27,12 @@ import MindfulnessHistory from './screens/MindfulnessHistory';
 import ClaimReward from './screens/ClaimReward';
 import Wardrobe from './screens/Wardrobe';
 import SettingsUnits from './screens/SettingsUnits';
-import SettingsAnimation from './screens/SettingsAnimation';
+import SettingsNotifications from './screens/SettingsNotifications';
 import SettingsApps from './screens/SettingsApps';
 import SettingsMembership from './screens/SettingsMembership';
 import FastingTimer from './screens/FastingTimer';
+import Biometrics from './screens/Biometrics';
+import Profile from './screens/Profile';
 
 // Mock Data
 export const CHARACTERS: Character[] = [
@@ -36,7 +40,7 @@ export const CHARACTERS: Character[] = [
     id: 'judy',
     name: 'Judy Hopps',
     role: 'Agility & Cardio',
-    image: 'https://upload.wikimedia.org/wikipedia/en/e/e6/Judy_Hopps.png',
+    image: 'https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png',
     themeColor: 'blue',
     quotes: [
       "Ready to make the world a better place? Start with a squat!",
@@ -59,7 +63,7 @@ export const CHARACTERS: Character[] = [
     id: 'nick',
     name: 'Nick Wilde',
     role: 'Strategy & HIIT',
-    image: 'https://upload.wikimedia.org/wikipedia/en/9/9c/Nick_Wilde.png',
+    image: 'https://static.wikia.nocookie.net/zootopia/images/0/03/Nick_Wilde_Render.png',
     themeColor: 'green',
     quotes: [
       "Never let them see that they get to you.",
@@ -81,7 +85,7 @@ export const CHARACTERS: Character[] = [
     id: 'bogo',
     name: 'Chief Bogo',
     role: 'Strength & Power',
-    image: 'https://static.wikia.nocookie.net/disney/images/9/91/Chief_Bogo_infobox.png',
+    image: 'https://static.wikia.nocookie.net/zootopia/images/e/e5/Chief_Bogo_Render.png',
     themeColor: 'gray',
     quotes: [
       "Life isn't some cartoon musical where you sing a little song and abs appear. WORK!",
@@ -103,7 +107,7 @@ export const CHARACTERS: Character[] = [
     id: 'flash',
     name: 'Flash',
     role: 'Endurance & Yoga',
-    image: 'https://static.wikia.nocookie.net/disney/images/9/9c/Flash_infobox.png',
+    image: 'https://static.wikia.nocookie.net/zootopia/images/a/a2/Flash_Render.png',
     themeColor: 'brown',
     quotes: [
       "Standard... transaction... takes... effort...",
@@ -125,7 +129,7 @@ export const CHARACTERS: Character[] = [
     id: 'finnick',
     name: 'Finnick',
     role: 'Speed & Agility',
-    image: 'https://static.wikia.nocookie.net/disney/images/2/2f/Finnick_infobox.png',
+    image: 'https://static.wikia.nocookie.net/zootopia/images/5/5a/Finnick_Render.png',
     themeColor: 'orange',
     quotes: [
       "I'm all grit, no quit. And I bite ankles.",
@@ -145,14 +149,48 @@ export const CHARACTERS: Character[] = [
   }
 ];
 
+// Helper to format date YYYY-MM-DD
+const formatDateKey = (date: Date) => {
+  const d = new Date(date);
+  const month = '' + (d.getMonth() + 1);
+  const day = '' + d.getDate();
+  const year = d.getFullYear();
+  return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+};
+
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>(Screen.WELCOME);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<Character>(CHARACTERS[0]);
+  const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
+  const [dailyCalorieLimit, setDailyCalorieLimit] = useState<number>(2430);
   
+  // Date State
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   // Fasting State (Lifted)
   const [isFasting, setIsFasting] = useState(false);
   const [fastStartTime, setFastStartTime] = useState<Date | null>(null);
+  const [fastingPlan, setFastingPlan] = useState<FastingPlanConfig>({
+    protocol: '16:8 Method',
+    fastingHours: 16,
+    eatingHours: 8
+  });
+
+  // User Data State (Lifted)
+  const [userStats, setUserStats] = useState<UserStats>({
+    name: '',
+    dob: '',
+    gender: 'male',
+    age: '24',
+    height: "5'10",
+    weight: '165',
+    activityLevel: 'active'
+  });
+
+  // Add missing userGoal state
+  const [userGoal, setUserGoal] = useState<'lose' | 'maintain' | 'gain'>('maintain');
 
   // State to pass data to session timers
   const [activeSession, setActiveSession] = useState<{ title: string; icon: string; duration?: string; color?: string } | null>(null);
@@ -164,6 +202,8 @@ const App: React.FC = () => {
   const [workoutLogs, setWorkoutLogs] = useState<ActivityLog[]>([]);
   const [meditationLogs, setMeditationLogs] = useState<ActivityLog[]>([]);
   const [foodLogs, setFoodLogs] = useState<FoodLogItem[]>([]);
+  const [waterLogs, setWaterLogs] = useState<WaterLogItem[]>([]);
+  const [fastingLogs, setFastingLogs] = useState<FastingLog[]>([]);
 
   // Inventory State
   const [inventory, setInventory] = useState<string[]>(['none']); // 'none' is always owned
@@ -179,6 +219,14 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
+  // Filter logs based on selected date
+  const selectedDateKey = formatDateKey(selectedDate);
+  const filteredWorkoutLogs = useMemo(() => workoutLogs.filter(log => log.date === selectedDateKey), [workoutLogs, selectedDateKey]);
+  const filteredMeditationLogs = useMemo(() => meditationLogs.filter(log => log.date === selectedDateKey), [meditationLogs, selectedDateKey]);
+  const filteredFoodLogs = useMemo(() => foodLogs.filter(log => log.date === selectedDateKey), [foodLogs, selectedDateKey]);
+  const filteredWaterLogs = useMemo(() => waterLogs.filter(log => log.date === selectedDateKey), [waterLogs, selectedDateKey]);
+  const filteredFastingLogs = useMemo(() => fastingLogs.filter(log => log.date === selectedDateKey), [fastingLogs, selectedDateKey]);
+
   // Helper to start a session and navigate
   const startSession = (screen: Screen, data: { title: string; icon: string; duration?: string; color?: string }) => {
     setActiveSession(data);
@@ -192,12 +240,14 @@ const App: React.FC = () => {
   };
 
   const handleSessionComplete = (type: 'workout' | 'meditation', data: any) => {
+    const today = new Date();
     const newLog: ActivityLog = {
       id: Date.now().toString(),
       title: data.title,
       icon: data.icon,
       duration: data.duration, 
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: formatDateKey(today),
       calories: data.calories,
       color: data.color
     };
@@ -207,11 +257,84 @@ const App: React.FC = () => {
     } else {
       setMeditationLogs(prev => [newLog, ...prev]);
     }
+    // Ensure we are viewing today when a new log is added
+    setSelectedDate(today);
     setCurrentScreen(Screen.HOME);
   };
 
   const handleAddFood = (item: FoodLogItem) => {
-    setFoodLogs(prev => [item, ...prev]);
+    const today = new Date();
+    const newItem = { ...item, date: formatDateKey(today) };
+    setFoodLogs(prev => [newItem, ...prev]);
+    setSelectedDate(today);
+  };
+
+  const handleDeleteFood = (id: string) => {
+    setFoodLogs(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleUpdateFood = (updatedItem: FoodLogItem) => {
+    setFoodLogs(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  };
+
+  // Workout/Meditation Update Handlers
+  const handleUpdateWorkout = (updatedLog: ActivityLog) => {
+    setWorkoutLogs(prev => prev.map(log => log.id === updatedLog.id ? updatedLog : log));
+  };
+
+  const handleUpdateMeditation = (updatedLog: ActivityLog) => {
+    setMeditationLogs(prev => prev.map(log => log.id === updatedLog.id ? updatedLog : log));
+  };
+
+  const handleDeleteWorkout = (id: string) => {
+    setWorkoutLogs(prev => prev.filter(log => log.id !== id));
+  };
+
+  const handleDeleteMeditation = (id: string) => {
+    setMeditationLogs(prev => prev.filter(log => log.id !== id));
+  };
+
+  // Water Handlers
+  const handleAddWater = (amount: number) => {
+    const today = new Date();
+    const newItem: WaterLogItem = {
+      id: Date.now().toString(),
+      amount,
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: formatDateKey(today)
+    };
+    setWaterLogs(prev => [newItem, ...prev]);
+    setSelectedDate(today);
+  };
+
+  const handleDeleteWater = (id: string) => {
+    setWaterLogs(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleUpdateWater = (updatedItem: WaterLogItem) => {
+    setWaterLogs(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+  };
+
+  // Fasting Handlers
+  const handleFastingStateChange = (fasting: boolean) => {
+    if (!fasting && isFasting && fastStartTime) {
+        // Ending a fast, record it
+        const now = new Date();
+        const diff = now.getTime() - fastStartTime.getTime();
+        const hours = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        
+        const newLog: FastingLog = {
+            id: Date.now().toString(),
+            duration: `${hours}h ${mins}m`,
+            startTime: fastStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            endTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: formatDateKey(now)
+        };
+        setFastingLogs(prev => [newLog, ...prev]);
+    }
+    
+    setIsFasting(fasting);
   };
 
   const handleUnlockItem = (itemId: string) => {
@@ -230,66 +353,128 @@ const App: React.FC = () => {
         return <Login onNavigate={handleNavigate} />;
       case Screen.SIGNUP:
         return <Signup onNavigate={handleNavigate} />;
+      case Screen.FORGOT_PASSWORD:
+        return <ForgotPassword onNavigate={handleNavigate} />;
       case Screen.CHARACTER_SELECT:
         return <CharacterSelect activeCharacter={activeCharacter} setActiveCharacter={setActiveCharacter} onNavigate={handleNavigate} />;
       case Screen.USER_DATA:
-        return <UserData activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
+        return <UserData 
+                  activeCharacter={activeCharacter} 
+                  onNavigate={handleNavigate} 
+                  userStats={userStats}
+                  setUserStats={setUserStats}
+               />;
       case Screen.GOAL_SELECTION:
-        return <GoalSelection activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
+        {/* Added missing userGoal and setUserGoal props */}
+        return <GoalSelection 
+                  activeCharacter={activeCharacter} 
+                  onNavigate={handleNavigate} 
+                  userGoal={userGoal}
+                  setUserGoal={setUserGoal}
+               />;
       case Screen.FASTING_SETUP:
-        return <FastingSetup activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
+        return <FastingSetup 
+                  activeCharacter={activeCharacter} 
+                  onNavigate={handleNavigate} 
+                  setFastingPlan={setFastingPlan}
+               />;
       case Screen.PLAN_GENERATION:
-        return <PlanGeneration activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
+        {/* Added missing userStats and userGoal props */}
+        return <PlanGeneration 
+                  activeCharacter={activeCharacter} 
+                  onNavigate={handleNavigate} 
+                  fastingPlan={fastingPlan}
+                  calories={dailyCalorieLimit}
+                  setCalories={setDailyCalorieLimit}
+                  userStats={userStats}
+                  userGoal={userGoal}
+               />;
       case Screen.HOME:
         return <Home 
             character={activeCharacter} 
             onNavigate={handleNavigate} 
             onStartSession={startSession} 
-            workoutLogs={workoutLogs}
-            meditationLogs={meditationLogs}
+            workoutLogs={filteredWorkoutLogs}
+            meditationLogs={filteredMeditationLogs}
+            foodLogs={filteredFoodLogs}
+            waterLogs={filteredWaterLogs}
             isFasting={isFasting}
             fastStartTime={fastStartTime}
+            unitSystem={unitSystem}
+            dailyCalorieLimit={dailyCalorieLimit}
         />;
       case Screen.FASTING_TIMER:
         return <FastingTimer 
             onNavigate={handleNavigate} 
             isFasting={isFasting} 
-            setIsFasting={setIsFasting}
+            setIsFasting={handleFastingStateChange}
             fastStartTime={fastStartTime}
             setFastStartTime={setFastStartTime}
+            fastingPlan={fastingPlan}
         />;
       case Screen.FOOD_LOG:
         return <FoodLog 
             onNavigate={handleNavigate} 
             activeCharacter={activeCharacter} 
             onAddFood={handleAddFood}
+            onDeleteFood={handleDeleteFood}
+            onUpdateFood={handleUpdateFood}
+            foodLogs={filteredFoodLogs}
+            targetCalories={dailyCalorieLimit}
+        />;
+      case Screen.FOOD_HISTORY:
+        return <FoodHistory 
+            onNavigate={handleNavigate} 
             foodLogs={foodLogs}
         />;
       case Screen.WATER_LOG:
-        return <WaterLog onNavigate={handleNavigate} />;
+        return <WaterLog 
+            onNavigate={handleNavigate} 
+            waterLogs={filteredWaterLogs}
+            onAddWater={handleAddWater}
+            onDeleteWater={handleDeleteWater}
+            onUpdateWater={handleUpdateWater}
+            unitSystem={unitSystem}
+        />;
       case Screen.ANALYTICS:
         return <Analytics 
-            foodLogs={foodLogs}
-            workoutLogs={workoutLogs}
-            meditationLogs={meditationLogs}
+            foodLogs={filteredFoodLogs}
+            workoutLogs={filteredWorkoutLogs}
+            meditationLogs={filteredMeditationLogs}
+            waterLogs={filteredWaterLogs}
+            fastingLogs={filteredFastingLogs}
             onNavigate={handleNavigate}
+            onUpdateWorkout={handleUpdateWorkout}
+            onUpdateMeditation={handleUpdateMeditation}
+            onDeleteWorkout={handleDeleteWorkout}
+            onDeleteMeditation={handleDeleteMeditation}
+            dailyCalorieLimit={dailyCalorieLimit}
         />;
       case Screen.WORKOUT_HISTORY:
         return <WorkoutHistory logs={workoutLogs} onNavigate={handleNavigate} />;
       case Screen.MINDFULNESS_HISTORY:
         return <MindfulnessHistory logs={meditationLogs} onNavigate={handleNavigate} />;
       case Screen.ACHIEVEMENTS:
-        return <Achievements onNavigate={handleNavigate} inventory={inventory} />;
+        return <Achievements 
+            onNavigate={handleNavigate} 
+            inventory={inventory} 
+            activeCharacter={activeCharacter} 
+        />;
       case Screen.CLAIM_REWARD:
-        return <ClaimReward activeCharacter={activeCharacter} onNavigate={handleNavigate} onUnlock={handleUnlockItem} />;
+        return <ClaimReward 
+            activeCharacter={activeCharacter} 
+            setActiveCharacter={setActiveCharacter}
+            onNavigate={handleNavigate} 
+            onUnlock={handleUnlockItem} 
+        />;
       case Screen.WARDROBE:
         return <Wardrobe activeCharacter={activeCharacter} setActiveCharacter={setActiveCharacter} inventory={inventory} onNavigate={handleNavigate} />;
       case Screen.SETTINGS:
-        return <Settings isDarkMode={isDarkMode} toggleTheme={toggleTheme} activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
+        return <Settings isDarkMode={isDarkMode} toggleTheme={toggleTheme} activeCharacter={activeCharacter} onNavigate={handleNavigate} unitSystem={unitSystem} />;
       case Screen.SETTINGS_UNITS:
-        return <SettingsUnits onNavigate={handleNavigate} />;
-      case Screen.SETTINGS_ANIMATION:
-        return <SettingsAnimation onNavigate={handleNavigate} />;
+        return <SettingsUnits onNavigate={handleNavigate} currentSystem={unitSystem} onApply={setUnitSystem} />;
+      case Screen.SETTINGS_NOTIFICATIONS:
+        return <SettingsNotifications onNavigate={handleNavigate} />;
       case Screen.SETTINGS_APPS:
         return <SettingsApps onNavigate={handleNavigate} />;
       case Screen.SETTINGS_MEMBERSHIP:
@@ -300,64 +485,58 @@ const App: React.FC = () => {
         return <MeditationTimer 
             onNavigate={handleNavigate} 
             sessionData={activeSession} 
+            activeCharacter={activeCharacter}
             onComplete={(data) => handleSessionComplete('meditation', data)}
         />;
       case Screen.WORKOUT_TIMER:
         return <WorkoutTimer 
             onNavigate={handleNavigate} 
             sessionData={activeSession} 
+            activeCharacter={activeCharacter}
             onComplete={(data) => handleSessionComplete('workout', data)}
         />;
       case Screen.MANUAL_MEDITATION:
         return <ManualMeditationEntry onNavigate={handleNavigate} onStartSession={startSession} />;
       case Screen.MANUAL_WORKOUT:
         return <ManualWorkoutEntry onNavigate={handleNavigate} onStartSession={startSession} />;
+      case Screen.BIOMETRICS:
+        {/* Added missing userStats and setUserStats props */}
+        return <Biometrics 
+                  onNavigate={handleNavigate} 
+                  unitSystem={unitSystem} 
+                  userStats={userStats}
+                  setUserStats={setUserStats}
+               />;
+      case Screen.PROFILE:
+        {/* Added missing workoutLogs and meditationLogs props */}
+        return <Profile 
+                  onNavigate={handleNavigate} 
+                  userStats={userStats} 
+                  activeCharacter={activeCharacter} 
+                  unitSystem={unitSystem} 
+                  workoutLogs={workoutLogs}
+                  meditationLogs={meditationLogs}
+               />;
       default:
         return <Welcome onNavigate={handleNavigate} />;
     }
   };
 
   // Check if we should show the main app navigation and header
-  const isMainApp = [Screen.HOME, Screen.ANALYTICS, Screen.ACHIEVEMENTS, Screen.SETTINGS, Screen.COMPANIONS].includes(currentScreen);
+  const isMainApp = [Screen.HOME, Screen.ANALYTICS, Screen.ACHIEVEMENTS, Screen.SETTINGS, Screen.COMPANIONS, Screen.PROFILE, Screen.SETTINGS_UNITS, Screen.SETTINGS_NOTIFICATIONS, Screen.SETTINGS_APPS, Screen.SETTINGS_MEMBERSHIP].includes(currentScreen);
 
   return (
     <div className="flex flex-col h-screen w-full max-w-md mx-auto bg-light-bg dark:bg-dark-bg shadow-2xl overflow-hidden relative transition-colors duration-300">
       
       {/* Header - Persistent (only in main app) */}
       {isMainApp && (
-        <header className="flex items-center justify-between px-6 pt-12 pb-4 z-30 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md sticky top-0 border-b border-light-primary/10 dark:border-dark-primary/10">
-          <div className="flex items-center gap-3">
-             <button 
-              onClick={() => setCurrentScreen(Screen.SETTINGS)}
-              className="relative rounded-full size-11 overflow-hidden border-2 border-light-primary dark:border-dark-primary shadow-md hover:scale-105 transition-transform"
-            >
-              <img 
-                src={activeCharacter.image}
-                className="w-full h-full object-cover object-top" 
-                alt="Profile"
-              />
-            </button>
-            <div className="flex flex-col">
-              <h1 className="text-lg font-black leading-none text-light-text dark:text-dark-text tracking-tight uppercase">
-                {activeCharacter.name}
-              </h1>
-              <span className="text-light-muted dark:text-dark-muted text-[10px] font-bold tracking-widest uppercase flex items-center gap-1 mt-0.5">
-                <span className="size-2 rounded-full bg-green-500 animate-pulse"></span>
-                On Duty
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-end">
-                <span className="text-[10px] font-bold text-light-muted dark:text-dark-muted uppercase">Today</span>
-                <span className="text-xs font-black text-light-text dark:text-white">Oct 24</span>
-            </div>
-            <div className="size-10 rounded-xl bg-light-surface dark:bg-dark-surface border border-light-primary/20 dark:border-dark-primary/20 flex items-center justify-center shadow-sm">
-                <span className="material-symbols-outlined text-light-primary dark:text-dark-primary">calendar_month</span>
-            </div>
-          </div>
-        </header>
+        <DateHeader 
+          activeCharacter={activeCharacter} 
+          selectedDate={selectedDate} 
+          onDateSelect={setSelectedDate}
+          onOpenCalendar={() => setIsCalendarOpen(true)}
+          onProfileClick={() => handleNavigate(Screen.PROFILE)}
+        />
       )}
 
       {/* Main Content Area */}
@@ -455,40 +634,223 @@ const App: React.FC = () => {
         </nav>
       )}
 
+      {/* Calendar Modal */}
+      {isCalendarOpen && (
+        <CalendarModal 
+          selectedDate={selectedDate} 
+          onSelectDate={(d) => { setSelectedDate(d); setIsCalendarOpen(false); }} 
+          onClose={() => setIsCalendarOpen(false)} 
+        />
+      )}
+
     </div>
   );
 };
 
-const NavItem: React.FC<{ icon: string; label: string; isActive: boolean; onClick: () => void }> = ({ icon, label, isActive, onClick }) => {
+// ... (rest of DateHeader, CalendarModal, NavItem, MenuOption stay the same)
+const DateHeader: React.FC<{ 
+  activeCharacter: Character; 
+  selectedDate: Date; 
+  onDateSelect: (date: Date) => void;
+  onOpenCalendar: () => void;
+  onProfileClick: () => void;
+}> = ({ activeCharacter, selectedDate, onDateSelect, onOpenCalendar, onProfileClick }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [dateList, setDateList] = useState<Date[]>(() => {
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return [yesterday];
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  useEffect(() => {
+      if (scrollRef.current) {
+          scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+      }
+  }, []); 
+  const isToday = (d: Date) => {
+    const today = new Date();
+    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+  };
+  const isFuture = (d: Date) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return d > today;
+  };
+  const getDayName = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'short' });
+  const getDayNum = (d: Date) => d.getDate();
+  const getMonthName = (d: Date) => d.toLocaleDateString('en-US', { month: 'short' });
+  const handleStart = (clientX: number) => {
+      if(!scrollRef.current) return;
+      setIsDragging(true);
+      setStartX(clientX - scrollRef.current.offsetLeft);
+      setScrollLeft(scrollRef.current.scrollLeft);
+  };
+  const handleMove = (clientX: number) => {
+      if (!isDragging || !scrollRef.current) return;
+      const x = clientX - scrollRef.current.offsetLeft;
+      const walk = (x - startX) * 1.5; 
+      if (scrollRef.current.scrollLeft <= 0 && walk > 40) {
+          const firstDate = dateList[0];
+          const prevDate = new Date(firstDate);
+          prevDate.setDate(firstDate.getDate() - 1);
+          setDateList(prev => [prevDate, ...prev]);
+          setIsDragging(false); 
+          return;
+      }
+      scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+  const handleEnd = () => setIsDragging(false);
   return (
-    <button 
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center w-16 h-full transition-all duration-300 group ${isActive ? 'scale-105' : 'opacity-60 hover:opacity-100'}`}
-    >
-      <div className={`size-10 rounded-xl flex items-center justify-center transition-colors mb-1 ${
-        isActive 
-          ? 'bg-light-primary/20 dark:bg-dark-primary/20 text-light-primary dark:text-dark-primary' 
-          : 'bg-transparent text-gray-500 dark:text-gray-400 group-hover:bg-gray-100 dark:group-hover:bg-white/5'
-      }`}>
+    <header className="flex items-center justify-between px-6 pt-12 pb-4 z-30 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md sticky top-0 border-b border-light-primary/10 dark:border-dark-primary/10 select-none">
+      <div className="relative w-28 h-16 overflow-hidden mr-auto flex-shrink-0">
+         <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-light-bg dark:from-dark-bg to-transparent z-10 pointer-events-none"></div>
+         <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-light-bg dark:from-dark-bg to-transparent z-10 pointer-events-none"></div>
+         <div 
+            ref={scrollRef}
+            onTouchStart={(e) => handleStart(e.touches[0].clientX)}
+            onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+            onTouchEnd={handleEnd}
+            onMouseDown={(e) => handleStart(e.pageX)}
+            onMouseMove={(e) => { e.preventDefault(); handleMove(e.pageX); }}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
+            className="flex gap-3 px-4 items-center overflow-x-auto no-scrollbar h-full w-full cursor-grab active:cursor-grabbing"
+         >
+            {dateList.map((d, i) => (
+                <button 
+                key={i} 
+                onClick={() => {
+                    onDateSelect(d);
+                    if (i === 0) {
+                         const prevDate = new Date(d);
+                         prevDate.setDate(d.getDate() - 1);
+                         setDateList(prev => [prevDate, ...prev]);
+                    }
+                }}
+                className={`flex flex-col items-center justify-center shrink-0 transition-all duration-300 transform opacity-60 hover:opacity-100 scale-90 hover:scale-95`}
+                >
+                    <span className={`text-[9px] font-bold uppercase tracking-wider text-light-muted dark:text-dark-muted`}>{getDayName(d)}</span>
+                    <span className={`text-base font-bold leading-none text-light-text dark:text-white my-0.5`}>{getDayNum(d)}</span>
+                    <span className={`text-[8px] font-bold uppercase tracking-wide text-light-muted/70 dark:text-dark-muted/70`}>{getMonthName(d)}</span>
+                </button>
+            ))}
+         </div>
+      </div>
+      <div className="absolute left-1/2 top-12 -translate-x-1/2 flex flex-col items-center z-20">
+          <button 
+            onClick={onOpenCalendar}
+            className="flex items-center gap-2 bg-light-surface dark:bg-dark-surface px-5 py-2.5 rounded-2xl border-2 border-light-primary/20 dark:border-dark-primary/20 shadow-lg transition-transform active:scale-95 group"
+          >
+             <div className="flex flex-col items-center">
+                <span className="text-[10px] font-black uppercase tracking-widest text-light-muted dark:text-dark-muted leading-tight">
+                    {isToday(selectedDate) ? 'Today' : selectedDate.getFullYear()}
+                </span>
+                <span className="text-base font-black text-light-text dark:text-white leading-tight">
+                    {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+             </div>
+             <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1"></div>
+             <span className="material-symbols-outlined text-light-primary dark:text-dark-primary group-hover:scale-110 transition-transform">calendar_month</span>
+          </button>
+      </div>
+      <div className="flex-1 flex flex-col items-end">
+        <button onClick={onProfileClick} className="group relative">
+            <div className="relative rounded-full size-11 overflow-hidden border-2 border-light-primary dark:border-dark-primary shadow-md group-hover:scale-105 transition-transform group-active:scale-95">
+                <img src={activeCharacter.image} className="w-full h-full object-cover object-top" alt="Profile" />
+            </div>
+        </button>
+      </div>
+    </header>
+  );
+};
+const CalendarModal: React.FC<{ selectedDate: Date; onSelectDate: (d: Date) => void; onClose: () => void }> = ({ selectedDate, onSelectDate, onClose }) => {
+    const [viewDate, setViewDate] = useState(new Date(selectedDate));
+    const [yearInput, setYearInput] = useState(viewDate.getFullYear().toString());
+    const daysInMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    const firstDayOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+    const changeMonth = (delta: number) => {
+        const newDate = new Date(viewDate);
+        newDate.setMonth(newDate.getMonth() + delta);
+        setViewDate(newDate);
+        setYearInput(newDate.getFullYear().toString());
+    };
+    const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setYearInput(e.target.value);
+        const year = parseInt(e.target.value);
+        if (!isNaN(year) && year > 1900 && year < 2100) {
+            const newDate = new Date(viewDate);
+            newDate.setFullYear(year);
+            setViewDate(newDate);
+        }
+    };
+    const generateDays = () => {
+        const days = [];
+        const totalDays = daysInMonth(viewDate);
+        const startDay = firstDayOfMonth(viewDate); 
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        for (let i = 0; i < startDay; i++) { days.push(<div key={`empty-${i}`} className="size-10"></div>); }
+        for (let i = 1; i <= totalDays; i++) {
+            const currentDayDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), i);
+            const isSelected = formatDateKey(currentDayDate) === formatDateKey(selectedDate);
+            const isActuallyToday = formatDateKey(currentDayDate) === formatDateKey(new Date());
+            const isFuture = currentDayDate > today;
+
+            days.push(
+                <button 
+                    key={i} 
+                    disabled={isFuture}
+                    onClick={() => onSelectDate(currentDayDate)}
+                    className={`size-10 rounded-full flex items-center justify-center text-sm font-bold transition-all relative ${
+                        isSelected 
+                        ? 'bg-light-primary dark:bg-dark-primary text-black dark:text-dark-bg shadow-lg scale-110 z-10' 
+                        : isActuallyToday 
+                            ? 'bg-light-primary/10 dark:bg-dark-primary/10 border-2 border-light-primary dark:border-dark-primary text-light-primary dark:text-dark-primary font-black shadow-sm' 
+                            : isFuture
+                                ? 'text-gray-300 dark:text-gray-700 cursor-not-allowed'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10'
+                    }`}
+                >
+                    {i}
+                </button>
+            );
+        }
+        return days;
+    };
+    return (
+        <div className="absolute inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
+            <div className="bg-white dark:bg-dark-surface w-full max-sm rounded-[2rem] p-6 shadow-2xl animate-fade-in-up border border-white/20">
+                <div className="flex justify-between items-center mb-6">
+                    <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"><span className="material-symbols-outlined">chevron_left</span></button>
+                    <div className="flex items-center gap-1">
+                        <span className="text-lg font-black text-gray-800 dark:text-white uppercase tracking-wide">{viewDate.toLocaleDateString('en-US', { month: 'long' })}</span>
+                        <input type="number" value={yearInput} onChange={handleYearChange} className="w-20 bg-transparent text-lg font-black text-gray-500 dark:text-gray-400 focus:text-light-primary dark:focus:text-dark-primary outline-none border-b-2 border-transparent focus:border-light-primary dark:focus:border-dark-primary text-center transition-colors appearance-none" />
+                    </div>
+                    <button onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"><span className="material-symbols-outlined">chevron_right</span></button>
+                </div>
+                <div className="grid grid-cols-7 gap-y-2 place-items-center mb-2">{['S','M','T','W','T','F','S'].map((d, i) => (<span key={i} className="text-[10px] font-black text-gray-400 uppercase">{d}</span>))}</div>
+                <div className="grid grid-cols-7 gap-y-2 place-items-center">{generateDays()}</div>
+                <button onClick={onClose} className="w-full mt-6 py-4 bg-gray-100 dark:bg-white/10 rounded-xl text-sm font-bold uppercase tracking-widest text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">Close</button>
+            </div>
+        </div>
+    );
+};
+const NavItem: React.FC<{ icon: string; label: string; isActive: boolean; onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
+    <button onClick={onClick} className={`flex flex-col items-center justify-center w-16 h-full transition-all duration-300 group ${isActive ? 'scale-105' : 'opacity-60 hover:opacity-100'}`}>
+      <div className={`size-10 rounded-xl flex items-center justify-center transition-colors mb-1 ${isActive ? 'bg-light-primary/20 dark:bg-dark-primary/20 text-light-primary dark:text-dark-primary' : 'bg-transparent text-gray-500 dark:text-gray-400 group-hover:bg-gray-100 dark:group-hover:bg-white/5'}`}>
         <span className={`material-symbols-outlined text-2xl ${isActive ? 'filled' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{icon}</span>
       </div>
-      <span className={`text-[9px] font-bold uppercase tracking-wide transition-colors ${
-          isActive ? 'text-light-primary dark:text-dark-primary' : 'text-gray-400'
-      }`}>{label}</span>
+      <span className={`text-[9px] font-bold uppercase tracking-wide transition-colors ${isActive ? 'text-light-primary dark:text-dark-primary' : 'text-gray-400'}`}>{label}</span>
     </button>
-  );
-};
-
+);
 const MenuOption: React.FC<{ label: string; icon: string; color: string; onClick: () => void; delay: string }> = ({ label, icon, color, onClick, delay }) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center justify-between w-full p-3.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-100 dark:border-white/10 shadow-lg transform transition-all hover:scale-105 active:scale-95`}
-    style={{ animationDelay: delay }}
-  >
+  <button onClick={onClick} className={`flex items-center justify-between w-full p-3.5 rounded-2xl bg-white dark:bg-dark-surface border border-gray-100 dark:border-white/10 shadow-lg transform transition-all hover:scale-105 active:scale-95`} style={{ animationDelay: delay }}>
     <span className="font-bold text-gray-800 dark:text-white uppercase tracking-wide text-xs pl-2">{label}</span>
-    <div className={`size-9 rounded-full ${color} flex items-center justify-center shadow-md`}>
-      <span className="material-symbols-outlined text-lg">{icon}</span>
-    </div>
+    <div className={`size-9 rounded-full ${color} flex items-center justify-center shadow-md`}><span className="material-symbols-outlined text-lg">{icon}</span></div>
   </button>
 );
 
