@@ -169,6 +169,9 @@ const App: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+  // Overlay visibility control
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+
   // Fasting State (Lifted)
   const [isFasting, setIsFasting] = useState(false);
   const [fastStartTime, setFastStartTime] = useState<Date | null>(null);
@@ -186,11 +189,8 @@ const App: React.FC = () => {
     age: '24',
     height: "5'10",
     weight: '165',
-    activityLevel: 'active'
+    activityLevel: 'Active'
   });
-
-  // Add missing userGoal state
-  const [userGoal, setUserGoal] = useState<'lose' | 'maintain' | 'gain'>('maintain');
 
   // State to pass data to session timers
   const [activeSession, setActiveSession] = useState<{ title: string; icon: string; duration?: string; color?: string } | null>(null);
@@ -237,6 +237,7 @@ const App: React.FC = () => {
   const handleNavigate = (screen: Screen) => {
     setCurrentScreen(screen);
     setIsMenuOpen(false);
+    setIsOverlayOpen(false); // Reset overlay on navigation
   };
 
   const handleSessionComplete = (type: 'workout' | 'meditation', data: any) => {
@@ -365,13 +366,7 @@ const App: React.FC = () => {
                   setUserStats={setUserStats}
                />;
       case Screen.GOAL_SELECTION:
-        {/* Added missing userGoal and setUserGoal props */}
-        return <GoalSelection 
-                  activeCharacter={activeCharacter} 
-                  onNavigate={handleNavigate} 
-                  userGoal={userGoal}
-                  setUserGoal={setUserGoal}
-               />;
+        return <GoalSelection activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
       case Screen.FASTING_SETUP:
         return <FastingSetup 
                   activeCharacter={activeCharacter} 
@@ -379,15 +374,12 @@ const App: React.FC = () => {
                   setFastingPlan={setFastingPlan}
                />;
       case Screen.PLAN_GENERATION:
-        {/* Added missing userStats and userGoal props */}
         return <PlanGeneration 
                   activeCharacter={activeCharacter} 
                   onNavigate={handleNavigate} 
                   fastingPlan={fastingPlan}
                   calories={dailyCalorieLimit}
                   setCalories={setDailyCalorieLimit}
-                  userStats={userStats}
-                  userGoal={userGoal}
                />;
       case Screen.HOME:
         return <Home 
@@ -421,6 +413,7 @@ const App: React.FC = () => {
             onUpdateFood={handleUpdateFood}
             foodLogs={filteredFoodLogs}
             targetCalories={dailyCalorieLimit}
+            onToggleOverlay={setIsOverlayOpen}
         />;
       case Screen.FOOD_HISTORY:
         return <FoodHistory 
@@ -449,6 +442,7 @@ const App: React.FC = () => {
             onDeleteWorkout={handleDeleteWorkout}
             onDeleteMeditation={handleDeleteMeditation}
             dailyCalorieLimit={dailyCalorieLimit}
+            onToggleOverlay={setIsOverlayOpen}
         />;
       case Screen.WORKOUT_HISTORY:
         return <WorkoutHistory logs={workoutLogs} onNavigate={handleNavigate} />;
@@ -500,23 +494,16 @@ const App: React.FC = () => {
       case Screen.MANUAL_WORKOUT:
         return <ManualWorkoutEntry onNavigate={handleNavigate} onStartSession={startSession} />;
       case Screen.BIOMETRICS:
-        {/* Added missing userStats and setUserStats props */}
-        return <Biometrics 
-                  onNavigate={handleNavigate} 
-                  unitSystem={unitSystem} 
-                  userStats={userStats}
-                  setUserStats={setUserStats}
-               />;
+        return <Biometrics onNavigate={handleNavigate} unitSystem={unitSystem} />;
       case Screen.PROFILE:
-        {/* Added missing workoutLogs and meditationLogs props */}
         return <Profile 
-                  onNavigate={handleNavigate} 
-                  userStats={userStats} 
-                  activeCharacter={activeCharacter} 
-                  unitSystem={unitSystem} 
-                  workoutLogs={workoutLogs}
-                  meditationLogs={meditationLogs}
-               />;
+            onNavigate={handleNavigate} 
+            userStats={userStats} 
+            activeCharacter={activeCharacter} 
+            unitSystem={unitSystem}
+            workoutLogs={workoutLogs}
+            meditationLogs={meditationLogs}
+        />;
       default:
         return <Welcome onNavigate={handleNavigate} />;
     }
@@ -525,11 +512,14 @@ const App: React.FC = () => {
   // Check if we should show the main app navigation and header
   const isMainApp = [Screen.HOME, Screen.ANALYTICS, Screen.ACHIEVEMENTS, Screen.SETTINGS, Screen.COMPANIONS, Screen.PROFILE, Screen.SETTINGS_UNITS, Screen.SETTINGS_NOTIFICATIONS, Screen.SETTINGS_APPS, Screen.SETTINGS_MEMBERSHIP].includes(currentScreen);
 
+  // Determine if header and footer should be rendered
+  const shouldShowNav = isMainApp && !isOverlayOpen;
+
   return (
     <div className="flex flex-col h-screen w-full max-w-md mx-auto bg-light-bg dark:bg-dark-bg shadow-2xl overflow-hidden relative transition-colors duration-300">
       
-      {/* Header - Persistent (only in main app) */}
-      {isMainApp && (
+      {/* Header - Persistent (only in main app, hidden for Profile to avoid double headers) */}
+      {shouldShowNav && currentScreen !== Screen.PROFILE && (
         <DateHeader 
           activeCharacter={activeCharacter} 
           selectedDate={selectedDate} 
@@ -540,7 +530,7 @@ const App: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 overflow-y-auto no-scrollbar relative z-10 ${isMainApp ? 'pb-28' : ''}`}>
+      <main className={`flex-1 overflow-y-auto no-scrollbar relative z-10 ${shouldShowNav ? 'pb-28' : ''}`}>
         {renderScreen()}
       </main>
 
@@ -590,9 +580,9 @@ const App: React.FC = () => {
       )}
 
       {/* Bottom Navigation - Persistent (only in main app) */}
-      {isMainApp && (
-        <nav className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto z-50 px-6 pb-6 pt-4 bg-gradient-to-t from-light-bg dark:from-dark-bg via-light-bg/95 dark:via-dark-bg/95 to-transparent pointer-events-none">
-          <div className="bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border border-light-primary/20 dark:border-dark-primary/20 rounded-[2rem] h-20 flex justify-between items-center shadow-2xl shadow-black/10 pointer-events-auto px-2 relative">
+      {shouldShowNav && (
+        <nav className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto z-50 px-6 pb-6 pt-4 pointer-events-none">
+          <div className="bg-white/70 dark:bg-dark-surface/70 backdrop-blur-2xl border border-white/40 dark:border-white/5 rounded-[2.5rem] h-20 flex justify-between items-center shadow-2xl shadow-black/10 pointer-events-auto px-2 relative overflow-hidden">
             
             <NavItem 
               icon="home" 
@@ -647,7 +637,6 @@ const App: React.FC = () => {
   );
 };
 
-// ... (rest of DateHeader, CalendarModal, NavItem, MenuOption stay the same)
 const DateHeader: React.FC<{ 
   activeCharacter: Character; 
   selectedDate: Date; 
@@ -674,11 +663,6 @@ const DateHeader: React.FC<{
     const today = new Date();
     return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
   };
-  const isFuture = (d: Date) => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return d > today;
-  };
   const getDayName = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'short' });
   const getDayNum = (d: Date) => d.getDate();
   const getMonthName = (d: Date) => d.toLocaleDateString('en-US', { month: 'short' });
@@ -704,10 +688,9 @@ const DateHeader: React.FC<{
   };
   const handleEnd = () => setIsDragging(false);
   return (
-    <header className="flex items-center justify-between px-6 pt-12 pb-4 z-30 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md sticky top-0 border-b border-light-primary/10 dark:border-dark-primary/10 select-none">
+    <header className="flex items-center justify-between px-6 pt-12 pb-4 z-30 bg-white/70 dark:bg-dark-bg/70 backdrop-blur-2xl sticky top-0 border-b border-white/20 select-none">
       <div className="relative w-28 h-16 overflow-hidden mr-auto flex-shrink-0">
-         <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-light-bg dark:from-dark-bg to-transparent z-10 pointer-events-none"></div>
-         <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-light-bg dark:from-dark-bg to-transparent z-10 pointer-events-none"></div>
+         <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-transparent to-transparent z-10 pointer-events-none"></div>
          <div 
             ref={scrollRef}
             onTouchStart={(e) => handleStart(e.touches[0].clientX)}
@@ -742,7 +725,7 @@ const DateHeader: React.FC<{
       <div className="absolute left-1/2 top-12 -translate-x-1/2 flex flex-col items-center z-20">
           <button 
             onClick={onOpenCalendar}
-            className="flex items-center gap-2 bg-light-surface dark:bg-dark-surface px-5 py-2.5 rounded-2xl border-2 border-light-primary/20 dark:border-dark-primary/20 shadow-lg transition-transform active:scale-95 group"
+            className="flex items-center gap-2 bg-white/80 dark:bg-dark-surface/80 px-5 py-2.5 rounded-2xl border-2 border-white/60 dark:border-white/5 shadow-lg transition-transform active:scale-95 group backdrop-blur-xl"
           >
              <div className="flex flex-col items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest text-light-muted dark:text-dark-muted leading-tight">
@@ -758,7 +741,7 @@ const DateHeader: React.FC<{
       </div>
       <div className="flex-1 flex flex-col items-end">
         <button onClick={onProfileClick} className="group relative">
-            <div className="relative rounded-full size-11 overflow-hidden border-2 border-light-primary dark:border-dark-primary shadow-md group-hover:scale-105 transition-transform group-active:scale-95">
+            <div className="relative rounded-full size-11 overflow-hidden border-2 border-white dark:border-white/20 shadow-md group-hover:scale-105 transition-transform group-active:scale-95">
                 <img src={activeCharacter.image} className="w-full h-full object-cover object-top" alt="Profile" />
             </div>
         </button>
@@ -823,7 +806,7 @@ const CalendarModal: React.FC<{ selectedDate: Date; onSelectDate: (d: Date) => v
     };
     return (
         <div className="absolute inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
-            <div className="bg-white dark:bg-dark-surface w-full max-sm rounded-[2rem] p-6 shadow-2xl animate-fade-in-up border border-white/20">
+            <div className="bg-white dark:bg-dark-surface w-full max-w-sm rounded-[2rem] p-6 shadow-2xl animate-fade-in-up border border-white/20">
                 <div className="flex justify-between items-center mb-6">
                     <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"><span className="material-symbols-outlined">chevron_left</span></button>
                     <div className="flex items-center gap-1">

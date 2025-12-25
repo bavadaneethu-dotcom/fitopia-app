@@ -11,6 +11,7 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
   const [activity, setActivity] = useState('');
   const [duration, setDuration] = useState('30');
 
+  // Updated presets
   const sportsPresets = [
     { name: 'Football', icon: '⚽', color: 'green' },
     { name: 'Cricket', icon: '🏏', color: 'blue' },
@@ -35,23 +36,34 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
 
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-light-bg dark:bg-dark-bg font-sans animate-fade-in transition-colors duration-300">
-      
-      {/* Uniform Header */}
-      <div className="flex items-center px-8 pt-10 pb-4 justify-between z-20 sticky top-0 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-md">
-        <div className="flex flex-col">
-            <h2 className="text-2xl font-black leading-none text-gray-800 dark:text-white uppercase tracking-tighter italic transform -skew-x-6">TRAINING</h2>
-            <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mt-1">Academy Briefing</span>
+       {/* Background Ambience */}
+       <div className="absolute inset-0 bg-gradient-to-b from-light-surface to-light-bg dark:from-dark-surface dark:to-dark-bg pointer-events-none"></div>
+       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+
+      {/* Header */}
+      <div className="relative z-10 flex items-center justify-between p-6 pt-10">
+        <div className="size-12"></div>
+        <div className="flex items-center gap-2 px-3 py-1 bg-light-surface dark:bg-dark-surface border border-light-primary/20 dark:border-dark-primary/20 rounded-full shadow-sm">
+             <span className="size-2 bg-light-primary dark:bg-dark-primary rounded-full animate-pulse"></span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-light-text dark:text-white">Academy Uplink</span>
         </div>
         <button 
           onClick={() => onNavigate(Screen.HOME)}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-90 shadow-sm border border-white dark:border-white/5"
+          className="size-12 rounded-full bg-white/40 dark:bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/60 dark:hover:bg-white/20 transition-colors border border-white/20 dark:border-white/5 shadow-sm"
         >
-          <span className="material-symbols-outlined text-gray-600 dark:text-white text-2xl font-bold">close</span>
+          <span className="material-symbols-outlined text-light-text dark:text-white">close</span>
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col pt-4 gap-6 relative z-10 overflow-y-auto no-scrollbar pb-20 w-full px-6">
-        <div className="bg-light-surface dark:bg-dark-surface backdrop-blur-sm rounded-[2.5rem] p-6 shadow-xl border border-light-primary/10 dark:border-dark-primary/10 space-y-8 relative overflow-hidden">
+      <div className="flex-1 flex flex-col pt-4 gap-8 relative z-10 overflow-y-auto no-scrollbar pb-20 w-full">
+        <div className="text-center space-y-2 flex-shrink-0 px-6">
+            <h2 className="text-3xl font-black text-light-text dark:text-white tracking-tight uppercase italic transform -skew-x-3">Mission Briefing</h2>
+            <p className="text-light-muted dark:text-dark-muted text-sm font-bold uppercase tracking-wide">Configure training parameters.</p>
+        </div>
+
+        {/* Input Card */}
+        <div className="mx-6 bg-light-surface dark:bg-dark-surface backdrop-blur-sm rounded-[2rem] p-6 shadow-xl border border-light-primary/10 dark:border-dark-primary/10 space-y-8 relative overflow-hidden flex-shrink-0">
+            {/* Decoration Bar */}
             <div className="absolute top-0 left-0 w-1.5 h-full bg-light-primary dark:bg-dark-primary"></div>
 
             <div className="space-y-3">
@@ -67,6 +79,7 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
                     />
                 </div>
 
+                {/* Sports Presets */}
                 <div className="pt-2">
                     <p className="text-[10px] font-black text-light-muted/70 dark:text-dark-muted/70 uppercase tracking-widest mb-2 ml-1">Standard Ops</p>
                     <div className="flex flex-wrap gap-2">
@@ -101,6 +114,7 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
                     />
                 </div>
                 
+                {/* Preset Chips */}
                  <div className="flex gap-2 justify-start overflow-x-auto no-scrollbar pt-2">
                     {[10, 20, 30, 45, 60].map(min => (
                         <button 
@@ -115,27 +129,23 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onS
             </div>
         </div>
 
-        {/* Uniform Rectangular Start Button */}
-        <div className="mt-auto pb-10">
+        {/* Start Button */}
+        <div className="mt-auto px-6">
             <button 
                 onClick={handleStart}
-                className="w-full h-16 rounded-[1.8rem] bg-[#FACC15] dark:bg-yellow-500 text-black font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-yellow-400/30 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] group relative overflow-hidden"
+                className="w-full h-20 rounded-[2rem] bg-light-primary dark:bg-dark-primary text-light-text dark:text-dark-bg shadow-xl shadow-light-primary/30 dark:shadow-dark-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group relative overflow-hidden"
             >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shine"></div>
-                <span className="material-symbols-outlined text-2xl filled">play_arrow</span>
-                START MISSION
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div>
+                
+                <span className="material-symbols-outlined text-4xl filled relative z-10 group-hover:scale-110 transition-transform">play_arrow</span>
+                <div className="flex flex-col items-start relative z-10">
+                    <span className="text-xl font-black uppercase tracking-widest italic leading-none">Start Mission</span>
+                    <span className="text-[10px] font-bold opacity-70 uppercase tracking-[0.2em]">Initiate Sequence</span>
+                </div>
             </button>
         </div>
       </div>
-      <style>{`
-        @keyframes shine {
-            0% { transform: translateX(-200%) skewX(-12deg); }
-            20%, 100% { transform: translateX(200%) skewX(-12deg); }
-        }
-        .animate-shine {
-            animation: shine 3s infinite ease-in-out;
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Screen, UserStats } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Screen } from '../types';
 
 interface Dimensions {
   waist: string;
@@ -21,12 +21,9 @@ interface WeightLog {
 interface BiometricsProps {
   onNavigate: (screen: Screen) => void;
   unitSystem: 'metric' | 'imperial';
-  // Fix: Added missing props to match App.tsx requirements
-  userStats: UserStats;
-  setUserStats: (stats: UserStats) => void;
 }
 
-const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem, userStats, setUserStats }) => {
+const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>(unitSystem === 'metric' ? 'kg' : 'lbs');
   const [lengthUnit, setLengthUnit] = useState<'cm' | 'in'>(unitSystem === 'metric' ? 'cm' : 'in');
   const [weight, setWeight] = useState('75');
@@ -71,24 +68,27 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem, userSta
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col bg-gray-50 dark:bg-dark-bg font-sans transition-colors duration-300">
-      
-      {/* Uniform Header */}
-      <div className="flex items-center px-8 pt-10 pb-4 justify-between z-20 sticky top-0 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-md border-b border-gray-100 dark:border-white/5">
-        <div className="flex flex-col">
-            <h2 className="text-2xl font-black leading-none text-gray-800 dark:text-white uppercase tracking-tighter italic transform -skew-x-6">BIOMETRICS</h2>
-            <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em] mt-1">Medical Bay Uplink</span>
-        </div>
+    <div className="relative flex h-full min-h-screen w-full flex-col bg-gray-50 dark:bg-dark-bg font-sans">
+      <div className="flex flex-col items-center px-6 pt-10 pb-6 relative z-20 bg-white dark:bg-dark-surface border-b border-gray-100 dark:border-white/5">
         <button 
-          onClick={() => onNavigate(Screen.HOME)}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-90 shadow-sm border border-white dark:border-white/5"
+          onClick={() => onNavigate(Screen.HOME)} 
+          className="absolute top-10 right-6 size-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center text-gray-800 dark:text-white"
         >
-          <span className="material-symbols-outlined text-gray-600 dark:text-white text-2xl font-bold">close</span>
+          <span className="material-symbols-outlined text-2xl">close</span>
         </button>
+        
+        <div className="flex flex-col items-center gap-1">
+            <div className="size-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-1">
+                <span className="material-symbols-outlined text-red-500 filled text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
+            </div>
+            <h2 className="text-lg font-black uppercase text-gray-800 dark:text-white tracking-tight">Medical Bay</h2>
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">ZPD Health Record</span>
+        </div>
       </div>
 
-      <div className="flex-1 px-6 pt-6 pb-40 flex flex-col gap-8 overflow-y-auto no-scrollbar">
+      <div className="flex-1 px-6 pt-8 pb-32 flex flex-col gap-8 overflow-y-auto no-scrollbar">
           
+          {/* Body Mass Indexing Container */}
           <div className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md rounded-[2.5rem] p-1 shadow-lg border border-white/60 dark:border-white/5">
               <div className="flex justify-between items-center px-6 py-4 bg-gray-100/50 dark:bg-white/5 rounded-t-[2.2rem]">
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Body Mass Indexing</h3>
@@ -117,10 +117,14 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem, userSta
               </div>
           </div>
 
+          {/* Physical Dimensions Container */}
           <div className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md rounded-[2.5rem] p-1 shadow-lg border border-white/60 dark:border-white/5">
               <div className="flex justify-between items-center px-6 py-4 bg-gray-100/50 dark:bg-white/5 rounded-t-[2.2rem]">
                   <div className="flex items-center gap-2">
                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Physical Dimensions</h3>
+                      <button onClick={() => setIsEditingMeasures(!isEditingMeasures)} className="text-gray-300 hover:text-blue-500 transition-colors">
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                      </button>
                   </div>
                   <div className="flex bg-white dark:bg-black/40 rounded-xl p-1 shadow-inner border border-gray-200/50 dark:border-white/5">
                       {['cm','in'].map(u => (
@@ -141,74 +145,160 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem, userSta
                         <div key={key} className="bg-white dark:bg-black/20 p-5 rounded-[1.8rem] border border-gray-100 dark:border-white/5 relative group shadow-sm">
                             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">{key}</span>
                             <div className="flex items-baseline gap-1">
-                                <input 
-                                    value={value} 
-                                    onChange={e => setMeasurements({...measurements, [key]: e.target.value})} 
-                                    className="w-full text-2xl font-black bg-transparent outline-none p-0 border-b-2 border-transparent focus:border-blue-400 text-gray-800 dark:text-white" 
-                                />
+                                {isEditingMeasures ? (
+                                    <input 
+                                        value={value} 
+                                        onChange={e => setMeasurements({...measurements, [key]: e.target.value})} 
+                                        className="w-full text-2xl font-black bg-transparent outline-none p-0 border-b-2 border-blue-400 text-gray-800 dark:text-white" 
+                                    />
+                                ) : (
+                                    <span className="text-2xl font-black text-gray-800 dark:text-white tracking-tight">{value}</span>
+                                )}
                                 <span className="text-[10px] font-bold text-gray-400 uppercase">{lengthUnit}</span>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                <button 
+                    onClick={() => setIsEditingMeasures(!isEditingMeasures)} 
+                    className="w-full mt-6 py-4 rounded-2xl bg-white dark:bg-white/5 text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest text-[10px] shadow-sm hover:shadow-md transition-all border border-gray-100 dark:border-white/10 active:scale-[0.98]"
+                >
+                    {isEditingMeasures ? 'Verify Measurements' : 'Update Measurement Record'}
+                </button>
               </div>
           </div>
 
-          <div className="flex flex-col gap-4 mb-10">
+          {/* Weight History Section */}
+          <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 px-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Patrol History</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Patrol Weight Logs</span>
                   <div className="h-px bg-gray-200 dark:bg-white/5 flex-1"></div>
               </div>
+              
               <div className="flex flex-col gap-3">
-                  {weightHistory.map((log) => (
-                      <div key={log.id} className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md p-4 rounded-2xl border border-white/60 dark:border-white/5 shadow-sm flex items-center justify-between animate-fade-in-up">
-                          <div className="flex items-center gap-4">
-                              <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500">
-                                  <span className="material-symbols-outlined text-xl">history</span>
-                              </div>
-                              <div>
-                                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">{new Date(log.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                                  <div className="flex items-baseline gap-1">
-                                      <span className="text-xl font-black text-gray-800 dark:text-white">{log.value}</span>
-                                      <span className="text-[10px] font-bold text-gray-400 uppercase">{log.unit}</span>
+                  {weightHistory.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center gap-2 opacity-30">
+                          <span className="material-symbols-outlined text-4xl">history</span>
+                          <p className="text-[10px] font-bold uppercase tracking-widest">No patrol logs found</p>
+                      </div>
+                  ) : (
+                      weightHistory.map((log) => (
+                          <div key={log.id} className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md p-4 rounded-2xl border border-white/60 dark:border-white/5 shadow-sm flex items-center justify-between animate-fade-in-up">
+                              <div className="flex items-center gap-4">
+                                  <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500">
+                                      <span className="material-symbols-outlined text-xl">history</span>
+                                  </div>
+                                  <div>
+                                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider">{new Date(log.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                      <div className="flex items-baseline gap-1">
+                                          <span className="text-xl font-black text-gray-800 dark:text-white">{log.value}</span>
+                                          <span className="text-[10px] font-bold text-gray-400 uppercase">{log.unit}</span>
+                                      </div>
                                   </div>
                               </div>
+                              <button 
+                                onClick={() => setEditingLog(log)}
+                                className="size-8 rounded-full bg-gray-50 dark:bg-white/5 flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors"
+                              >
+                                  <span className="material-symbols-outlined text-sm">edit</span>
+                              </button>
                           </div>
-                      </div>
-                  ))}
+                      ))
+                  )}
               </div>
           </div>
       </div>
 
-      {/* Uniform Rectangular Sync Button anchored near content scroll end */}
+      {/* Global Sync Button */}
       <div className="fixed bottom-0 left-0 right-0 p-6 z-30 bg-gradient-to-t from-gray-50 dark:from-dark-bg to-transparent">
           <div className="max-w-md mx-auto w-full">
               <button 
                 onClick={handleSync} 
                 disabled={saveStatus === 'saving'}
-                className={`w-full h-16 rounded-[1.8rem] font-black uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] group relative overflow-hidden ${
+                className={`w-full py-5 rounded-[1.8rem] font-black uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] ${
                     saveStatus === 'success' ? 'bg-green-500 text-white' : 
                     saveStatus === 'saving' ? 'bg-blue-400 text-white' :
                     'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'
                 }`}
               >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div>
                   <span className={`material-symbols-outlined filled ${saveStatus === 'saving' ? 'animate-spin' : ''}`}>
-                      {saveStatus === 'success' ? 'verified' : 'sync'}
+                      {saveStatus === 'success' ? 'verified' : 'sync_saved_locally'}
                   </span>
-                  {saveStatus === 'saving' ? 'UPLOADING...' : saveStatus === 'success' ? 'SYNC COMPLETE' : 'SYNC WITH DATABASE'}
+                  {saveStatus === 'saving' ? 'UPLOADING...' : saveStatus === 'success' ? 'SYNC COMPLETE' : 'Sync with Database'}
               </button>
           </div>
       </div>
-      <style>{`
-        @keyframes shine {
-            0% { transform: translateX(-200%) skewX(-12deg); }
-            20%, 100% { transform: translateX(200%) skewX(-12deg); }
-        }
-        .animate-shine {
-            animation: shine 3s infinite ease-in-out;
-        }
-      `}</style>
+
+      {/* History Edit Modal */}
+      {editingLog && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-6 animate-fade-in" onClick={() => setEditingLog(null)}>
+            <div className="bg-white dark:bg-dark-surface w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative border-2 border-blue-400 animate-pop-in" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setEditingLog(null)} className="absolute top-6 right-6 size-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined">close</span>
+                </button>
+                
+                <div className="text-center mb-8">
+                    <h3 className="text-xl font-black uppercase text-gray-800 dark:text-white tracking-tight">Edit Patrol Log</h3>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                        {new Date(editingLog.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </p>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Weight Edit */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mass Record ({editingLog.unit})</label>
+                        <input 
+                            type="number" 
+                            value={editingLog.value} 
+                            onChange={e => setEditingLog({...editingLog, value: e.target.value})}
+                            className="w-full h-14 px-6 bg-gray-50 dark:bg-black/20 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none font-bold text-xl text-gray-800 dark:text-white"
+                        />
+                    </div>
+
+                    {/* Dimensions Edit */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Physical Dimensions ({editingLog.dimensions.unit})</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            {Object.entries(editingLog.dimensions).map(([key, val]) => {
+                                if (key === 'unit') return null;
+                                return (
+                                    <div key={key} className="space-y-1">
+                                        <span className="text-[8px] font-bold text-gray-400 uppercase ml-1">{key}</span>
+                                        <input 
+                                            type="number"
+                                            value={val as string}
+                                            onChange={e => setEditingLog({
+                                                ...editingLog, 
+                                                dimensions: { ...editingLog.dimensions, [key]: e.target.value }
+                                            })}
+                                            className="w-full h-10 px-3 bg-gray-50 dark:bg-black/20 rounded-xl border border-transparent focus:border-blue-400 outline-none font-bold text-sm text-gray-800 dark:text-white"
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8 flex gap-3">
+                    <button 
+                        onClick={() => setEditingLog(null)}
+                        className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-gray-600"
+                    >
+                        Discard
+                    </button>
+                    <button 
+                        onClick={() => handleUpdateLog(editingLog)}
+                        className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-all"
+                    >
+                        Save Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };

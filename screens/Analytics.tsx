@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FoodLogItem, ActivityLog, WaterLogItem, FastingLog, Screen } from '../types';
 
 interface AnalyticsProps {
@@ -14,14 +14,21 @@ interface AnalyticsProps {
   onDeleteWorkout: (id: string) => void;
   onDeleteMeditation: (id: string) => void;
   dailyCalorieLimit: number;
+  onToggleOverlay?: (isOpen: boolean) => void;
 }
 
 const Analytics: React.FC<AnalyticsProps> = ({ 
     foodLogs, workoutLogs, meditationLogs, waterLogs, fastingLogs,
-    onNavigate, dailyCalorieLimit 
+    onNavigate, dailyCalorieLimit, onToggleOverlay
 }) => {
   const [selectedFood, setSelectedFood] = useState<FoodLogItem | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<{log: ActivityLog, type: 'workout' | 'meditation'} | null>(null);
+
+  // Sync navigation visibility with App.tsx
+  useEffect(() => {
+    const isAnyModalOpen = !!selectedFood || !!selectedActivity;
+    onToggleOverlay?.(isAnyModalOpen);
+  }, [selectedFood, selectedActivity, onToggleOverlay]);
 
   const currentCalories = foodLogs.reduce((acc, item) => acc + item.calories, 0);
   const remainingCalories = Math.max(0, dailyCalorieLimit - currentCalories);
@@ -42,11 +49,21 @@ const Analytics: React.FC<AnalyticsProps> = ({
     };
   };
 
+  const handleCloseDetail = () => {
+    setSelectedFood(null);
+    setSelectedActivity(null);
+  };
+
   return (
-    <div className="flex flex-col gap-6 px-6 pt-6 animate-fade-in pb-12 relative overflow-x-hidden">
+    <div className="flex flex-col gap-6 px-6 pt-6 animate-fade-in pb-12 relative overflow-x-hidden transition-all duration-500">
       
       {/* Dim Background for detail modals */}
-      {(selectedFood || selectedActivity) && <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-fade-in" />}
+      {(selectedFood || selectedActivity) && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md animate-fade-in-blur cursor-pointer" 
+          onClick={handleCloseDetail}
+        />
+      )}
 
       {/* Stats Page Header */}
       <div className="flex items-center justify-between px-2 mb-2">
@@ -171,7 +188,7 @@ const Analytics: React.FC<AnalyticsProps> = ({
           </section>
       </div>
 
-      {/* Detailed Modals - Refined Case File theme consistent with FoodLog */}
+      {/* Detailed Modals - Enhanced Smooth Transition & Case File Theme with Transparent Header */}
       {(selectedFood || selectedActivity) && (
         <DetailModalPremium 
             title={selectedFood?.name || selectedActivity?.log.title || ''}
@@ -190,13 +207,33 @@ const Analytics: React.FC<AnalyticsProps> = ({
                 discipline: '100%',
                 rank: 'Officer'
             }}
-            onClose={() => { setSelectedFood(null); setSelectedActivity(null); }}
+            onClose={handleCloseDetail}
         />
       )}
 
       <style>{`
-          @keyframes modal-pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-          .animate-modal-pop { animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          @keyframes fade-in-blur {
+              from { opacity: 0; backdrop-filter: blur(0px); }
+              to { opacity: 1; backdrop-filter: blur(8px); }
+          }
+          .animate-fade-in-blur {
+              animation: fade-in-blur 0.4s ease-out forwards;
+          }
+          @keyframes smooth-pop {
+              0% { transform: scale(0.92) translateY(20px); opacity: 0; }
+              100% { transform: scale(1) translateY(0); opacity: 1; }
+          }
+          .animate-smooth-pop {
+              animation: smooth-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          }
+          @keyframes smooth-stagger {
+              from { transform: translateY(10px); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+          }
+          .stagger-in {
+              animation: smooth-stagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+              opacity: 0;
+          }
       `}</style>
     </div>
   );
@@ -212,12 +249,14 @@ const DetailModalPremium: React.FC<{
     onClose: () => void;
     isActivity?: boolean;
 }> = ({ title, icon, kcal, mass, macros, micros, onClose, isActivity }) => (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 animate-fade-in" onClick={onClose}>
-        <div className="bg-[#EFEFEF] dark:bg-[#1a1a1a] w-full max-h-[85vh] max-w-[340px] animate-modal-pop relative flex flex-col rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white dark:border-white/5" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 pointer-events-none">
+        <div className="bg-white dark:bg-[#1a1a1a] w-full max-h-[85vh] max-w-[340px] animate-smooth-pop relative flex flex-col rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white dark:border-white/5 pointer-events-auto" onClick={e => e.stopPropagation()}>
             
+            {/* Texture Background */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/notebook.png")' }}></div>
 
-            <div className="flex items-center justify-center pt-8 pb-4 relative">
+            {/* Transparent Header */}
+            <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-center pt-8 pb-4 bg-white/40 dark:bg-black/40 backdrop-blur-md border-b border-white/10 stagger-in" style={{ animationDelay: '0.1s' }}>
                 <div className="bg-[#FEF08A] px-4 py-1.5 rounded-xl border border-yellow-300 shadow-sm flex items-center gap-1.5 transform -rotate-1">
                     <div className="text-center">
                         <p className="text-[7px] font-black uppercase text-yellow-700 tracking-tighter">IDENTIFIED</p>
@@ -233,21 +272,22 @@ const DetailModalPremium: React.FC<{
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-12 no-scrollbar">
+            <div className="flex-1 overflow-y-auto px-6 pt-24 pb-12 no-scrollbar relative z-10">
                 <div className="flex flex-col items-center mt-2">
-                    <div className="size-32 rounded-[2.5rem] bg-gradient-to-br from-gray-200 to-white dark:from-white/10 flex items-center justify-center text-6xl shadow-[0_15px_40px_rgba(0,0,0,0.08)] mb-6 overflow-hidden relative">
+                    {/* Hero Icon Container Square */}
+                    <div className="size-36 rounded-[2.8rem] bg-gradient-to-br from-gray-200 to-white dark:from-white/10 dark:to-white/5 flex items-center justify-center text-7xl shadow-[0_15px_30px_rgba(0,0,0,0.1)] mb-6 overflow-hidden relative border border-white/50 stagger-in" style={{ animationDelay: '0.15s' }}>
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.8),transparent)] pointer-events-none"></div>
-                        <span className="relative z-10 drop-shadow-md">{icon}</span>
+                        <span className="relative z-10 drop-shadow-lg">{icon}</span>
                     </div>
 
-                    <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none mb-2 text-center">{title}</h3>
+                    <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter leading-none mb-3 text-center stagger-in" style={{ animationDelay: '0.2s' }}>{title}</h3>
                     
-                    <div className="flex items-center gap-2 mb-8">
+                    <div className="flex items-center gap-2 mb-8 stagger-in" style={{ animationDelay: '0.25s' }}>
                         <span className="bg-white dark:bg-white/5 text-orange-600 dark:text-orange-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-orange-50 dark:border-white/10 shadow-sm">{kcal} {isActivity ? 'XP' : 'KCAL'}</span>
                         <span className="bg-white dark:bg-white/5 text-gray-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100 dark:border-white/10 shadow-sm">{mass.toUpperCase()}</span>
                     </div>
 
-                    <div className="w-full space-y-3 mb-8">
+                    <div className="w-full space-y-3 mb-8 stagger-in" style={{ animationDelay: '0.3s' }}>
                         <div className="flex items-center gap-3"><h4 className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Composition</h4><div className="h-px bg-gray-200 dark:bg-white/10 flex-1"></div></div>
                         <div className="grid grid-cols-3 gap-3">
                             <MacroCardMini label={isActivity ? "Power" : "Protein"} val={`${macros.protein}${isActivity ? 'p' : 'g'}`} dotColor="bg-blue-600" textColor="text-blue-600" />
@@ -256,10 +296,10 @@ const DetailModalPremium: React.FC<{
                         </div>
                     </div>
 
-                    <div className="w-full space-y-3">
+                    <div className="w-full space-y-3 stagger-in" style={{ animationDelay: '0.35s' }}>
                         <div className="flex items-center gap-3"><h4 className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">{isActivity ? 'Performance' : 'Nutrients'}</h4><div className="h-px bg-gray-200 dark:bg-white/10 flex-1"></div></div>
                         <div className="grid grid-cols-2 gap-3">
-                            {Object.entries(micros).slice(0, 4).map(([key, value]) => (
+                            {Object.entries(micros).slice(0, 4).map(([key, value], i) => (
                                 <div key={key} className="bg-white dark:bg-white/5 p-3 px-4 rounded-xl flex justify-between items-center border border-gray-50 dark:border-white/10 shadow-sm transition-all hover:border-gray-200">
                                     <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
                                         {key.replace('vit', 'Vit ').replace('sodium', 'Sod').replace('fiber', 'Fib')}
@@ -284,7 +324,7 @@ const MacroCardMini: React.FC<{ label: string; val: string; dotColor: string; te
 );
 
 const LogItem: React.FC<{ icon: string; title: string; subtitle: string; value: number; unit: string; onClick: () => void; color?: string }> = ({ icon, title, subtitle, value, unit, onClick, color = "text-[#D97706] dark:text-yellow-400" }) => (
-    <button onClick={onClick} className="group flex items-center gap-4 p-5 bg-white dark:bg-dark-surface rounded-[1.8rem] border border-gray-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all hover:border-yellow-400 text-left">
+    <button onClick={onClick} className="group flex items-center gap-4 p-5 bg-white dark:bg-dark-surface rounded-[1.8rem] border border-gray-100 dark:border-white/5 shadow-sm active:scale-[0.98] transition-all hover:border-yellow-400 text-left hover:shadow-md">
         <div className="size-14 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">{icon}</div>
         <div className="flex-1 min-w-0">
             <h4 className="text-base font-black text-gray-800 dark:text-white uppercase tracking-tight truncate">{title}</h4>

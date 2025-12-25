@@ -33,23 +33,30 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-[#EAFBF9] dark:bg-gray-900 font-sans animate-fade-in text-teal-900 dark:text-teal-50">
       
-      {/* Uniform Header */}
-      <div className="flex items-center px-8 pt-10 pb-4 justify-between z-20 sticky top-0 bg-[#EAFBF9]/90 dark:bg-gray-900/90 backdrop-blur-md">
-        <div className="flex flex-col">
-            <h2 className="text-2xl font-black leading-none text-teal-900 dark:text-white uppercase tracking-tighter italic transform -skew-x-6">MEDITATION</h2>
-            <span className="text-[9px] font-black text-teal-600 dark:text-teal-500 uppercase tracking-[0.3em] mt-1">Mystic Springs Oasis</span>
-        </div>
+      {/* Header */}
+      <div className="relative z-10 flex items-center justify-between px-6 pt-10 pb-2">
+        <div className="size-10"></div>
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-700 dark:text-teal-400">Mystic Springs Oasis</span>
         <button 
           onClick={() => onNavigate(Screen.HOME)}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 transition-all active:scale-90 shadow-sm"
+          className="size-10 rounded-full bg-white/40 dark:bg-white/5 shadow-sm backdrop-blur-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center justify-center"
         >
-          <span className="material-symbols-outlined text-teal-900 dark:text-white text-2xl font-bold">close</span>
+          <span className="material-symbols-outlined text-teal-900 dark:text-white text-xl">close</span>
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col pt-4 pb-10 gap-6 relative z-10 overflow-y-auto no-scrollbar w-full px-6">
+      <div className="flex-1 flex flex-col pt-8 pb-10 gap-8 relative z-10 overflow-y-auto no-scrollbar w-full">
         
-        <div className="bg-[#E0F2F1] dark:bg-white/5 rounded-[2.5rem] p-6 shadow-sm border border-teal-100 dark:border-white/5 space-y-8">
+        {/* Title Section */}
+        <div className="text-center space-y-2 px-6">
+            <h2 className="text-3xl font-black text-teal-900 dark:text-white tracking-tight">Design Your Peace</h2>
+            <p className="text-teal-700 dark:text-teal-300 text-sm font-bold">Customize your mindfulness session.</p>
+        </div>
+
+        {/* Main Card */}
+        <div className="mx-6 bg-[#E0F2F1] dark:bg-white/5 rounded-[2.5rem] p-6 shadow-sm border border-teal-100 dark:border-white/5 space-y-8">
+            
+            {/* Focus Area Section */}
             <div className="space-y-3">
                 <label className="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest ml-1">Focus Area</label>
                 <div className="relative group">
@@ -65,6 +72,7 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
                     />
                 </div>
                 
+                {/* Quick Focus Chips */}
                 <div>
                     <p className="text-[10px] font-bold text-teal-600/60 dark:text-teal-400/60 uppercase tracking-wider mb-2 ml-1">Quick Focus</p>
                     <div className="flex flex-wrap gap-2">
@@ -86,6 +94,7 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
                 </div>
             </div>
 
+            {/* Duration Section */}
             <div className="space-y-3">
                 <label className="text-[10px] font-black text-teal-700 dark:text-teal-400 uppercase tracking-widest ml-1">Duration (Minutes)</label>
                 <div className="relative group">
@@ -101,6 +110,7 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
                     />
                 </div>
                 
+                {/* Duration Chips */}
                 <div className="flex gap-2">
                     {[5, 10, 20, 30].map(min => (
                         <button 
@@ -119,27 +129,17 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
             </div>
         </div>
 
-        {/* Uniform Rectangular Start Button */}
-        <div className="mt-auto pb-10">
+        {/* Start Button */}
+        <div className="mt-auto px-6">
             <button 
                 onClick={handleStart}
-                className="w-full h-16 rounded-[1.8rem] bg-teal-600 text-white font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-teal-700/20 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] group relative overflow-hidden"
+                className="w-full h-16 rounded-full bg-[#0F766E] dark:bg-teal-600 text-white shadow-xl shadow-teal-700/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 font-black uppercase tracking-widest text-sm"
             >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine"></div>
                 <span className="material-symbols-outlined text-2xl filled">play_circle</span>
-                BEGIN JOURNEY
+                Begin Journey
             </button>
         </div>
       </div>
-      <style>{`
-        @keyframes shine {
-            0% { transform: translateX(-200%) skewX(-12deg); }
-            20%, 100% { transform: translateX(200%) skewX(-12deg); }
-        }
-        .animate-shine {
-            animation: shine 3s infinite ease-in-out;
-        }
-      `}</style>
     </div>
   );
 };

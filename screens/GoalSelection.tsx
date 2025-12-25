@@ -5,11 +5,11 @@ import { Screen, Character } from '../types';
 interface GoalSelectionProps {
   onNavigate: (screen: Screen) => void;
   activeCharacter?: Character;
-  userGoal: 'lose' | 'maintain' | 'gain';
-  setUserGoal: (goal: 'lose' | 'maintain' | 'gain') => void;
 }
 
-const GoalSelection: React.FC<GoalSelectionProps> = ({ onNavigate, activeCharacter, userGoal, setUserGoal }) => {
+const GoalSelection: React.FC<GoalSelectionProps> = ({ onNavigate, activeCharacter }) => {
+  const [selectedGoal, setSelectedGoal] = useState<'lose' | 'maintain' | 'gain'>('lose');
+
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#1a1a1a] text-light-text dark:text-white font-sans transition-colors duration-300">
       
@@ -62,25 +62,25 @@ const GoalSelection: React.FC<GoalSelectionProps> = ({ onNavigate, activeCharact
           
           {/* Option 1 */}
           <div 
-            onClick={() => setUserGoal('lose')}
+            onClick={() => setSelectedGoal('lose')}
             className={`group relative cursor-pointer flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 ease-out ${
-              userGoal === 'lose' 
+              selectedGoal === 'lose' 
                 ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 shadow-md scale-[1.02]' 
                 : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
-            <div className={`relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 ${userGoal === 'lose' ? 'border-yellow-400' : 'border-transparent'}`}>
-              <img alt="Speed" className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ2NVgst-ftlkjGEgLogelH42fohL1Npg5GUz7cxf9h6tFfXhAVi2gWV012NIASPLfoZpuhz7chC3omQQkXECEkcju-3EgrT4jFkIazo2O2Hs25uaaPR2cxoENtyjY4w7DL5iQ59wn2MV5LeKYzVaOHGN7x-wPEJQVZVLuA5378wQEWbpFrbpRtEA2FSo4g6kL57-xrzs0Nrmgd4o4Cs02w1P3Cq5YYujL7EM_1xHAXsLlLad3vP-A5XG53-kXG2Ia05NlEGKxEZib"/>
+            <div className={`relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 ${selectedGoal === 'lose' ? 'border-yellow-400' : 'border-transparent'}`}>
+              <img alt="Speed" className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCB5HXMDv4p631SvO1Uhq8pz5SfrkZjPoNKeujrPVVU8Lc_gecxn_ip0u-D1SrVguysMSA0zs3kqZAIZD0uSF55yDNoQUHx8KkyDagCpQlYAzclrKddk3gMhmIORTbfdZEjzSK5CNAGpWeaVKLio8igNijC08C1TWJGa8lHtcvF4KSB-vULOj8pUlyZWIpbnlSuLSNBzqQSNbPIJrERGbTdu3V1B5o3Nf_2VOXsiQTof2bFFE5-pyZigrtKa-TdC6xj4LB-m5mPGT0M"/>
             </div>
             <div className="flex flex-col flex-grow min-w-0">
               <div className="flex justify-between items-start mb-1">
                 <h3 className="font-black text-lg text-gray-800 dark:text-white leading-tight">Lose Weight</h3>
                 <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                  userGoal === 'lose'
+                  selectedGoal === 'lose'
                     ? 'border-yellow-400 bg-yellow-400'
                     : 'border-gray-300 bg-transparent'
                 }`}>
-                  {userGoal === 'lose' && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
+                  {selectedGoal === 'lose' && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
                 </div>
               </div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Get lean and agile.</p>
@@ -92,25 +92,25 @@ const GoalSelection: React.FC<GoalSelectionProps> = ({ onNavigate, activeCharact
 
           {/* Option 2 */}
           <div 
-            onClick={() => setUserGoal('maintain')}
+            onClick={() => setSelectedGoal('maintain')}
             className={`group relative cursor-pointer flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 ease-out ${
-              userGoal === 'maintain' 
+              selectedGoal === 'maintain' 
                 ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 shadow-md scale-[1.02]' 
                 : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
-            <div className={`relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 ${userGoal === 'maintain' ? 'border-yellow-400' : 'border-transparent'}`}>
+            <div className={`relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 ${selectedGoal === 'maintain' ? 'border-yellow-400' : 'border-transparent'}`}>
               <img alt="Balance" className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAiks3sR-IkTxLAWTNDcNPQgijP3Ps_i8uIHfg85TbVLCb92KCR-clDz5DMI5qQRJllUzO87UxKM1emRgnp9ExzztWFzAc6RQVe1Qjplhdups088A2AB2bW9Ixy7ycIqY8Y9Ia6jtXxmckEv-qEptMOrgOJDKxSQfAIfX46LkxihWo2mmLzKIHJ00CifvYfbvxYnYbl-7amM5kN-reohfOq9gkHIHhXzq2HMQgKMOAst3dh0qsj0yKLKcXCZtOkjlw2NboBga1l6GI"/>
             </div>
             <div className="flex flex-col flex-grow min-w-0">
               <div className="flex justify-between items-start mb-1">
                 <h3 className="font-black text-lg text-gray-800 dark:text-white leading-tight">Maintain</h3>
                 <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                  userGoal === 'maintain'
+                  selectedGoal === 'maintain'
                     ? 'border-yellow-400 bg-yellow-400'
                     : 'border-gray-300 bg-transparent'
                 }`}>
-                  {userGoal === 'maintain' && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
+                  {selectedGoal === 'maintain' && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
                 </div>
               </div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Stay fit and healthy.</p>
@@ -122,25 +122,25 @@ const GoalSelection: React.FC<GoalSelectionProps> = ({ onNavigate, activeCharact
 
           {/* Option 3 */}
           <div 
-            onClick={() => setUserGoal('gain')}
+            onClick={() => setSelectedGoal('gain')}
             className={`group relative cursor-pointer flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 ease-out ${
-              userGoal === 'gain' 
+              selectedGoal === 'gain' 
                 ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 shadow-md scale-[1.02]' 
                 : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
             }`}
           >
-            <div className={`relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 ${userGoal === 'gain' ? 'border-yellow-400' : 'border-transparent'}`}>
+            <div className={`relative h-20 w-20 flex-shrink-0 rounded-full overflow-hidden border-2 ${selectedGoal === 'gain' ? 'border-yellow-400' : 'border-transparent'}`}>
               <img alt="Power" className="h-full w-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtAxAVvgZdGafsxP0q1GSwEnsz77RblSvTNenr6FUzD3cCF_1rxKK4TOgiwR7xsYxdJH86lAAh834mjdEpedYkYVqwFE-B4WGYzUASFo385wuV48vBG4TNBr58Xwz649q3oFlQbyS4IZhGiJaGh-UcwohcWPTNexnXuicwydUwHSCghOvPsp_ei5xUMJNGeXZCnHfucXEMrztMKqCHoY1Elitrp6idCdcrBAaJSqlGPqT98-qUw8hBe_P4bfDVi00PKxySdux6VJM2"/>
             </div>
             <div className="flex flex-col flex-grow min-w-0">
               <div className="flex justify-between items-start mb-1">
                 <h3 className="font-black text-lg text-gray-800 dark:text-white leading-tight">Gain Muscle</h3>
                 <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                  userGoal === 'gain'
+                  selectedGoal === 'gain'
                     ? 'border-yellow-400 bg-yellow-400'
                     : 'border-gray-300 bg-transparent'
                 }`}>
-                  {userGoal === 'gain' && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
+                  {selectedGoal === 'gain' && <span className="material-symbols-outlined text-black text-[16px] font-bold">check</span>}
                 </div>
               </div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Build strength & power.</p>
