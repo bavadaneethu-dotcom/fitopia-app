@@ -92,7 +92,7 @@ export const CHARACTERS: Character[] = [
       "Dismissed! ...Wait, you haven't finished your set."
     ],
     onboardingMessages: {
-      select: "Do you think I got these horns by sitting on the couch? Join my squad.",
+      select: "Do you think I got these horns by sitting on the base? Join my squad.",
       dataSetup: "Report your metrics! Do not waste my time with guesses.",
       goal: "What is your objective? Make it count, or go home!",
       fasting: "Discipline! That is what this is about. Set your timer.",
@@ -164,6 +164,7 @@ const App: React.FC = () => {
   const [activeCharacter, setActiveCharacter] = useState<Character>(CHARACTERS[0]);
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
   const [dailyCalorieLimit, setDailyCalorieLimit] = useState<number>(2430);
+  const [userGoal, setUserGoal] = useState<'lose' | 'maintain' | 'gain'>('maintain');
   
   // Date State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -366,7 +367,12 @@ const App: React.FC = () => {
                   setUserStats={setUserStats}
                />;
       case Screen.GOAL_SELECTION:
-        return <GoalSelection activeCharacter={activeCharacter} onNavigate={handleNavigate} />;
+        return <GoalSelection 
+                  activeCharacter={activeCharacter} 
+                  onNavigate={handleNavigate} 
+                  userGoal={userGoal}
+                  setUserGoal={setUserGoal}
+               />;
       case Screen.FASTING_SETUP:
         return <FastingSetup 
                   activeCharacter={activeCharacter} 
@@ -380,6 +386,8 @@ const App: React.FC = () => {
                   fastingPlan={fastingPlan}
                   calories={dailyCalorieLimit}
                   setCalories={setDailyCalorieLimit}
+                  userStats={userStats}
+                  userGoal={userGoal}
                />;
       case Screen.HOME:
         return <Home 
@@ -468,7 +476,7 @@ const App: React.FC = () => {
       case Screen.SETTINGS_UNITS:
         return <SettingsUnits onNavigate={handleNavigate} currentSystem={unitSystem} onApply={setUnitSystem} />;
       case Screen.SETTINGS_NOTIFICATIONS:
-        return <SettingsNotifications onNavigate={handleNavigate} />;
+        return <SettingsNotifications onNavigate={handleNavigate} onToggleOverlay={setIsOverlayOpen} />;
       case Screen.SETTINGS_APPS:
         return <SettingsApps onNavigate={handleNavigate} />;
       case Screen.SETTINGS_MEMBERSHIP:

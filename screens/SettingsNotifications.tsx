@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Screen } from '../types';
 
 interface SettingsNotificationsProps {
   onNavigate: (screen: Screen) => void;
+  onToggleOverlay?: (isOpen: boolean) => void;
 }
 
 interface AlertConfig {
@@ -12,31 +13,31 @@ interface AlertConfig {
   description: string;
   iconUrl: string;
   soundName: string;
-  soundIcon: string; // Material symbol for the sound type
+  soundIcon: string; 
   enabled: boolean;
 }
 
 const AVAILABLE_SOUNDS = [
-    { name: 'Dinner Bell', icon: 'notifications_active' },
-    { name: 'Splash', icon: 'water_drop' },
-    { name: 'Soft Gong', icon: 'album' },
-    { name: 'Zen Chime', icon: 'spa' },
-    { name: 'Whistle', icon: 'sports' },
-    { name: 'Success', icon: 'check_circle' },
-    { name: 'Pop', icon: 'bubble_chart' },
-    { name: 'Ding', icon: 'notifications' },
-    { name: 'Siren', icon: 'emergency' },
-    { name: 'Roar', icon: 'pets' },
+    { name: 'Clawhauser\'s Donut', icon: 'notifications_active' },
+    { name: 'Rainforest Dew', icon: 'water_drop' },
+    { name: 'Mystic Springs Chime', icon: 'album' },
+    { name: 'Yax\'s Om', icon: 'spa' },
+    { name: 'Academy Drill', icon: 'sports' },
+    { name: 'Mission Accomplished', icon: 'check_circle' },
+    { name: 'Pawpsicle Pop', icon: 'bubble_chart' },
+    { name: 'ZPD Dispatch', icon: 'notifications' },
+    { name: 'Tundratown Siren', icon: 'emergency' },
+    { name: 'Savanna Howl', icon: 'pets' },
 ];
 
-const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigate }) => {
+const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigate, onToggleOverlay }) => {
   const [alerts, setAlerts] = useState<AlertConfig[]>([
     { 
       id: 'food', 
       label: 'Food Alert', 
       description: 'Meal reminders', 
       iconUrl: 'https://img.icons8.com/fluency/96/hamburger.png', 
-      soundName: 'Dinner Bell', 
+      soundName: 'Clawhauser\'s Donut', 
       soundIcon: 'notifications_active',
       enabled: true,
     },
@@ -45,7 +46,7 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
       label: 'Water Alert', 
       description: 'Hydration checks', 
       iconUrl: 'https://img.icons8.com/fluency/96/water.png', 
-      soundName: 'Splash', 
+      soundName: 'Rainforest Dew', 
       soundIcon: 'water_drop',
       enabled: true,
     },
@@ -54,7 +55,7 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
       label: 'Fasting Alert', 
       description: 'Window start/end', 
       iconUrl: 'https://img.icons8.com/fluency/96/clock.png', 
-      soundName: 'Soft Gong', 
+      soundName: 'Mystic Springs Chime', 
       soundIcon: 'album',
       enabled: true,
     },
@@ -63,7 +64,7 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
       label: 'Meditation Alert', 
       description: 'Mindfulness cues', 
       iconUrl: 'https://img.icons8.com/fluency/96/lotus.png', 
-      soundName: 'Zen Chime', 
+      soundName: 'Yax\'s Om', 
       soundIcon: 'spa',
       enabled: false,
     },
@@ -72,7 +73,7 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
       label: 'Activity Alert', 
       description: 'Workout nudge', 
       iconUrl: 'https://img.icons8.com/fluency/96/dumbbell.png', 
-      soundName: 'Siren', 
+      soundName: 'Tundratown Siren', 
       soundIcon: 'emergency',
       enabled: true,
     },
@@ -85,6 +86,10 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
   });
 
   const [activeSoundSelectId, setActiveSoundSelectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    onToggleOverlay?.(!!activeSoundSelectId);
+  }, [activeSoundSelectId, onToggleOverlay]);
 
   const toggleAlert = (id: string) => {
     setAlerts(prev => prev.map(alert => 
@@ -197,21 +202,21 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
           </div>
       </div>
 
-      {/* Sound Selection Modal */}
+      {/* Sound Selection Modal - Precisely matching screenshot */}
       {activeSoundSelectId && (
-          <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setActiveSoundSelectId(null)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setActiveSoundSelectId(null)}>
               <div 
-                className="bg-white dark:bg-[#1a1a1a] w-full max-w-sm rounded-t-[2rem] sm:rounded-[2rem] p-6 shadow-2xl animate-slide-up sm:animate-pop-in max-h-[70vh] flex flex-col" 
+                className="bg-[#f1f1f1] dark:bg-[#1a1c1e] w-full max-w-[340px] rounded-[2.5rem] p-6 shadow-2xl animate-pop-in max-h-[85vh] flex flex-col border border-white/20 dark:border-white/5" 
                 onClick={(e) => e.stopPropagation()}
               >
-                  <div className="flex justify-between items-center mb-6">
-                      <h3 className="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Choose Sound</h3>
-                      <button onClick={() => setActiveSoundSelectId(null)} className="p-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
-                          <span className="material-symbols-outlined text-gray-600 dark:text-gray-300">close</span>
+                  <div className="flex justify-between items-center mb-6 pl-2">
+                      <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest italic">CHOOSE SOUND</h3>
+                      <button onClick={() => setActiveSoundSelectId(null)} className="size-8 bg-white dark:bg-white/10 rounded-full shadow-sm flex items-center justify-center transition-transform active:scale-90">
+                          <span className="material-symbols-outlined text-gray-500 dark:text-gray-300 text-lg">close</span>
                       </button>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-2 overflow-y-auto no-scrollbar">
+                  <div className="flex-1 overflow-y-auto no-scrollbar space-y-2.5 pr-1">
                       {AVAILABLE_SOUNDS.map((sound) => {
                           const currentAlert = alerts.find(a => a.id === activeSoundSelectId);
                           const isSelected = currentAlert?.soundName === sound.name;
@@ -219,13 +224,23 @@ const SettingsNotifications: React.FC<SettingsNotificationsProps> = ({ onNavigat
                               <button 
                                 key={sound.name}
                                 onClick={() => updateSound(sound.name, sound.icon)}
-                                className={`flex items-center gap-4 p-3 rounded-xl transition-all active:scale-[0.98] ${isSelected ? 'bg-light-primary/10 dark:bg-dark-primary/10 border-2 border-light-primary dark:border-dark-primary' : 'bg-gray-50 dark:bg-white/5 border-2 border-transparent hover:bg-gray-100 dark:hover:bg-white/10'}`}
+                                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all active:scale-[0.98] border-2 shadow-sm ${
+                                  isSelected 
+                                  ? 'bg-[#FFFBEB] dark:bg-yellow-900/10 border-yellow-400' 
+                                  : 'bg-white dark:bg-white/5 border-transparent hover:bg-gray-50 dark:hover:bg-white/10'
+                                }`}
                               >
-                                  <div className={`size-10 rounded-full flex items-center justify-center ${isSelected ? 'bg-light-primary dark:bg-dark-primary text-white dark:text-dark-bg' : 'bg-white dark:bg-white/10 text-gray-400'}`}>
-                                      <span className="material-symbols-outlined text-lg">{sound.icon}</span>
+                                  <div className={`size-10 rounded-full flex items-center justify-center shadow-inner ${isSelected ? 'bg-yellow-400 text-white' : 'bg-gray-100 dark:bg-black/20 text-gray-400'}`}>
+                                      <span className="material-symbols-outlined text-xl">{sound.icon}</span>
                                   </div>
-                                  <span className={`text-sm font-bold flex-1 text-left ${isSelected ? 'text-light-primary dark:text-dark-primary' : 'text-gray-700 dark:text-gray-300'}`}>{sound.name}</span>
-                                  {isSelected && <span className="material-symbols-outlined text-light-primary dark:text-dark-primary">check_circle</span>}
+                                  <span className={`text-[13px] font-black flex-1 text-left ${isSelected ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                                    {sound.name}
+                                  </span>
+                                  {isSelected && (
+                                    <div className="size-6 rounded-full border-2 border-yellow-400 flex items-center justify-center">
+                                      <span className="material-symbols-outlined text-yellow-400 text-[16px] font-bold">check</span>
+                                    </div>
+                                  )}
                               </button>
                           );
                       })}
