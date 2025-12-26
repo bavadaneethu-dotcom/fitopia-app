@@ -33,10 +33,13 @@ const Achievements: React.FC<AchievementsProps> = ({ onNavigate, inventory = [],
       { id: 'headband', icon: 'sports', title: 'Running Band', subtitle: 'Gear', unlocked: inventory.includes('headband') },
   ];
 
+  // Determine if the main claimable reward ('shades') is already unlocked
+  const isRewardClaimed = inventory.includes('shades');
+
   return (
     <div className="flex flex-col gap-6 px-6 pt-6 pb-10 animate-fade-in relative">
       
-      {/* Rewards Page Header - Close button removed as this is a main tab */}
+      {/* Rewards Page Header */}
       <div className="flex items-center justify-between px-2 mb-2">
           <div className="flex flex-col">
               <h2 className="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tighter italic">Rewards</h2>
@@ -56,35 +59,37 @@ const Achievements: React.FC<AchievementsProps> = ({ onNavigate, inventory = [],
         </div>
       </div>
 
-      {/* Hero Achievement Card */}
-      <div className={`w-full relative overflow-hidden rounded-[2rem] bg-light-surface dark:bg-dark-surface shadow-lg border ${theme.border} group`}>
-        <div className={`h-48 w-full bg-cover bg-top relative transition-transform duration-700 group-hover:scale-105`} style={{ backgroundImage: `url("${activeCharacter.image}")` }}>
-          <div className="absolute inset-0 bg-gradient-to-t from-light-surface dark:from-dark-surface via-transparent to-transparent"></div>
-          <div className={`absolute inset-0 bg-gradient-to-b ${theme.bgGradient} opacity-30 mix-blend-overlay`}></div>
-          <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 shadow-sm flex items-center gap-2">
-            <span className={`material-symbols-outlined text-sm filled ${theme.iconText}`} style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-            <span className="text-[10px] font-bold uppercase tracking-wide text-light-text dark:text-white">Lvl {activeCharacter.level} Unlocked</span>
+      {/* Hero Achievement Card (The "Gift") - Only show if the reward hasn't been claimed yet */}
+      {!isRewardClaimed && (
+        <div className={`w-full relative overflow-hidden rounded-[2rem] bg-light-surface dark:bg-dark-surface shadow-lg border ${theme.border} group animate-fade-in`}>
+          <div className={`h-48 w-full bg-cover bg-top relative transition-transform duration-700 group-hover:scale-105`} style={{ backgroundImage: `url("${activeCharacter.image}")` }}>
+            <div className="absolute inset-0 bg-gradient-to-t from-light-surface dark:from-dark-surface via-transparent to-transparent"></div>
+            <div className={`absolute inset-0 bg-gradient-to-b ${theme.bgGradient} opacity-30 mix-blend-overlay`}></div>
+            <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 shadow-sm flex items-center gap-2">
+              <span className={`material-symbols-outlined text-sm filled ${theme.iconText}`} style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-light-text dark:text-white">Lvl {activeCharacter.level} Unlocked</span>
+            </div>
+          </div>
+          
+          <div className="p-6 -mt-12 relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+                 <span className={`size-2 rounded-full animate-pulse ${theme.iconBg.replace('bg-', 'bg-').replace('/30', '')}`}></span>
+                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">New Milestone</h3>
+            </div>
+            <h3 className="text-2xl font-black text-light-text dark:text-dark-text leading-none mb-2">Hustle Award!</h3>
+            <p className="text-sm text-light-muted dark:text-dark-muted font-medium italic leading-relaxed opacity-80">
+              "{activeCharacter.quotes[0] || "Don't skip a single shift, rookie!"}"
+            </p>
+            <button 
+              onClick={() => onNavigate?.(Screen.CLAIM_REWARD)}
+              className={`w-full mt-6 bg-gradient-to-r ${theme.bgGradient} hover:brightness-110 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 uppercase text-xs tracking-wider`}
+            >
+              <span className="material-symbols-outlined text-lg">redeem</span>
+              Collect New Gear
+            </button>
           </div>
         </div>
-        
-        <div className="p-6 -mt-12 relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-               <span className={`size-2 rounded-full animate-pulse ${theme.iconBg.replace('bg-', 'bg-').replace('/30', '')}`}></span>
-               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">New Milestone</h3>
-          </div>
-          <h3 className="text-2xl font-black text-light-text dark:text-dark-text leading-none mb-2">Hustle Award!</h3>
-          <p className="text-sm text-light-muted dark:text-dark-muted font-medium italic leading-relaxed opacity-80">
-            "{activeCharacter.quotes[0] || "Don't skip a single shift, rookie!"}"
-          </p>
-          <button 
-            onClick={() => onNavigate?.(Screen.CLAIM_REWARD)}
-            className={`w-full mt-6 bg-gradient-to-r ${theme.bgGradient} hover:brightness-110 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 uppercase text-xs tracking-wider`}
-          >
-            <span className="material-symbols-outlined text-lg">redeem</span>
-            Collect New Gear
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Roadmap */}
       <div className="bg-[#fdfbf7] dark:bg-dark-surface p-6 rounded-[2rem] border-2 border-dashed border-gray-300 dark:border-gray-600 font-sans relative overflow-hidden">
@@ -102,6 +107,7 @@ const Achievements: React.FC<AchievementsProps> = ({ onNavigate, inventory = [],
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{reward.subtitle}</p>
                     </div>
                     {!reward.unlocked && <span className="material-symbols-outlined text-gray-300">lock</span>}
+                    {reward.unlocked && <span className="material-symbols-outlined text-green-500">check_circle</span>}
                 </div>
             ))}
         </div>
