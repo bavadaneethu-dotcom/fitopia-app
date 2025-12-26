@@ -17,7 +17,7 @@ const SettingsUnits: React.FC<SettingsUnitsProps> = ({ onNavigate, currentSystem
   };
 
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-light-bg dark:bg-dark-bg animate-fade-in font-sans">
+    <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-light-bg dark:bg-dark-bg animate-fade-in font-sans transition-colors duration-300">
       {/* Header */}
       <div className="flex items-center px-6 pt-6 pb-2 justify-between z-20 sticky top-0 bg-light-bg/90 dark:bg-dark-bg/90 backdrop-blur-sm">
         <div className="size-12"></div>
@@ -30,9 +30,9 @@ const SettingsUnits: React.FC<SettingsUnitsProps> = ({ onNavigate, currentSystem
         </button>
       </div>
 
-      <div className="flex-1 px-6 pt-4 flex flex-col gap-6">
+      <div className="flex-1 px-6 pt-4 flex flex-col gap-6 overflow-y-auto no-scrollbar pb-10">
           <p className="text-light-muted dark:text-dark-muted text-sm font-medium text-center">
-              Choose your preferred system of measurement for weight, height, and distance.
+              Choose your preferred system of measurement for weight, height, and distance. Changes will reflect across your entire ZPD file.
           </p>
 
           <div className="grid grid-cols-1 gap-4">
@@ -50,7 +50,7 @@ const SettingsUnits: React.FC<SettingsUnitsProps> = ({ onNavigate, currentSystem
                               <p className="text-xs font-bold text-light-muted dark:text-dark-muted">kg, cm, km, ml</p>
                           </div>
                       </div>
-                      <div className={`size-6 rounded-full border-2 flex items-center justify-center ${selectedSystem === 'metric' ? 'border-light-primary dark:border-dark-primary bg-light-primary dark:bg-dark-primary' : 'border-gray-300 dark:border-gray-600'}`}>
+                      <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSystem === 'metric' ? 'border-light-primary dark:border-dark-primary bg-light-primary dark:bg-dark-primary' : 'border-gray-300 dark:border-gray-600'}`}>
                           {selectedSystem === 'metric' && <span className="material-symbols-outlined text-white dark:text-dark-bg text-sm font-bold">check</span>}
                       </div>
                   </div>
@@ -80,7 +80,7 @@ const SettingsUnits: React.FC<SettingsUnitsProps> = ({ onNavigate, currentSystem
                               <p className="text-xs font-bold text-light-muted dark:text-dark-muted">lbs, ft, mi, oz</p>
                           </div>
                       </div>
-                      <div className={`size-6 rounded-full border-2 flex items-center justify-center ${selectedSystem === 'imperial' ? 'border-light-primary dark:border-dark-primary bg-light-primary dark:bg-dark-primary' : 'border-gray-300 dark:border-gray-600'}`}>
+                      <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedSystem === 'imperial' ? 'border-light-primary dark:border-dark-primary bg-light-primary dark:bg-dark-primary' : 'border-gray-300 dark:border-gray-600'}`}>
                           {selectedSystem === 'imperial' && <span className="material-symbols-outlined text-white dark:text-dark-bg text-sm font-bold">check</span>}
                       </div>
                   </div>
@@ -97,12 +97,13 @@ const SettingsUnits: React.FC<SettingsUnitsProps> = ({ onNavigate, currentSystem
               </button>
           </div>
 
-          <div className="mt-auto pb-10">
+          <div className="w-full px-2 pt-2 pb-6">
               <button 
                 onClick={handleApply}
-                className="w-full bg-light-primary dark:bg-dark-primary text-white dark:text-dark-bg font-black uppercase tracking-widest py-4 rounded-xl shadow-lg shadow-light-primary/30 dark:shadow-dark-primary/30 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="w-full h-16 rounded-[1.8rem] bg-yellow-400 dark:bg-yellow-500 hover:bg-yellow-300 dark:hover:bg-yellow-400 text-black font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-yellow-400/30 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
               >
-                  Apply Changes
+                  <span className="material-symbols-outlined font-black group-hover:rotate-12 transition-transform">check_circle</span>
+                  APPLY CHANGES
               </button>
           </div>
       </div>

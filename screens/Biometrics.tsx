@@ -39,6 +39,46 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [editingLog, setEditingLog] = useState<WeightLog | null>(null);
 
+  // Conversion logic for Weight
+  const handleWeightUnitChange = (newUnit: 'kg' | 'lbs') => {
+      if (newUnit === weightUnit) return;
+      
+      const currentVal = parseFloat(weight);
+      if (isNaN(currentVal)) {
+          setWeightUnit(newUnit);
+          return;
+      }
+
+      let converted;
+      if (newUnit === 'lbs') {
+          converted = currentVal * 2.20462;
+      } else {
+          converted = currentVal / 2.20462;
+      }
+      
+      setWeight(converted.toFixed(1));
+      setWeightUnit(newUnit);
+  };
+
+  // Conversion logic for Measurements
+  const handleLengthUnitChange = (newUnit: 'cm' | 'in') => {
+      if (newUnit === lengthUnit) return;
+
+      const newMeasures = { ...measurements };
+      const ratio = newUnit === 'in' ? 0.393701 : 2.54;
+
+      Object.keys(newMeasures).forEach((key) => {
+          const k = key as keyof typeof measurements;
+          const val = parseFloat(newMeasures[k]);
+          if (!isNaN(val)) {
+              newMeasures[k] = (val * ratio).toFixed(1);
+          }
+      });
+
+      setMeasurements(newMeasures);
+      setLengthUnit(newUnit);
+  };
+
   const handleSync = () => {
       setSaveStatus('saving');
       const today = new Date().toISOString().split('T')[0];
@@ -93,10 +133,10 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
               <div className="flex justify-between items-center px-6 py-4 bg-gray-100/50 dark:bg-white/5 rounded-t-[2.2rem]">
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Body Mass Indexing</h3>
                   <div className="flex bg-white dark:bg-black/40 rounded-xl p-1 shadow-inner border border-gray-200/50 dark:border-white/5">
-                      {['kg','lbs'].map(u => (
+                      {(['kg','lbs'] as const).map(u => (
                         <button 
                             key={u} 
-                            onClick={() => setWeightUnit(u as any)} 
+                            onClick={() => handleWeightUnitChange(u)} 
                             className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all ${weightUnit === u ? 'bg-gray-100 dark:bg-gray-700 text-black dark:text-white shadow-sm' : 'text-gray-400'}`}
                         >
                             {u.toUpperCase()}
@@ -110,7 +150,7 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
                         type="number"
                         value={weight} 
                         onChange={e => setWeight(e.target.value)} 
-                        className="text-6xl font-black bg-transparent border-b-2 border-transparent focus:border-blue-500 w-40 outline-none text-gray-800 dark:text-white text-center" 
+                        className="text-6xl font-black bg-transparent border-b-2 border-transparent focus:border-blue-500 w-48 outline-none text-gray-800 dark:text-white text-center" 
                     />
                     <span className="text-xl font-black text-gray-300 uppercase tracking-widest">{weightUnit}</span>
                   </div>
@@ -127,10 +167,10 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
                       </button>
                   </div>
                   <div className="flex bg-white dark:bg-black/40 rounded-xl p-1 shadow-inner border border-gray-200/50 dark:border-white/5">
-                      {['cm','in'].map(u => (
+                      {(['cm','in'] as const).map(u => (
                         <button 
                             key={u} 
-                            onClick={() => setLengthUnit(u as any)} 
+                            onClick={() => handleLengthUnitChange(u)} 
                             className={`px-4 py-1.5 rounded-lg text-[9px] font-black transition-all ${lengthUnit === u ? 'bg-gray-100 dark:bg-gray-700 text-black dark:text-white shadow-sm' : 'text-gray-400'}`}
                         >
                             {u.toUpperCase()}
@@ -218,8 +258,8 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
                 disabled={saveStatus === 'saving'}
                 className={`w-full py-5 rounded-[1.8rem] font-black uppercase tracking-[0.15em] shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] ${
                     saveStatus === 'success' ? 'bg-green-500 text-white' : 
-                    saveStatus === 'saving' ? 'bg-blue-400 text-white' :
-                    'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'
+                    saveStatus === 'saving' ? 'bg-yellow-200 text-yellow-800' :
+                    'bg-[#FACC15] hover:bg-yellow-300 text-black shadow-yellow-400/20'
                 }`}
               >
                   <span className={`material-symbols-outlined filled ${saveStatus === 'saving' ? 'animate-spin' : ''}`}>

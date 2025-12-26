@@ -38,7 +38,6 @@ const Home: React.FC<HomeProps> = ({ character, onNavigate, onStartSession, work
   const waterUnit = unitSystem === 'metric' ? 'L' : 'oz';
   const waterTargetMl = 2500;
   const waterProgress = Math.min((totalWaterMl / waterTargetMl) * 100, 100);
-  const theme = themeStyles[character.themeColor] || themeStyles.blue;
 
   const getFastDuration = () => {
     if (!fastStartTime || !isFasting) return null;
@@ -50,109 +49,120 @@ const Home: React.FC<HomeProps> = ({ character, onNavigate, onStartSession, work
   };
 
   const fastDuration = getFastDuration();
+  const caloriePercent = Math.min((totalCalories / dailyCalorieLimit) * 100, 100);
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f9fa] dark:bg-dark-bg font-sans relative overflow-hidden transition-colors duration-300">
+    <div className="flex flex-col h-full bg-white dark:bg-dark-bg font-sans relative overflow-hidden transition-colors duration-300">
        <div className="flex-1 overflow-y-auto pb-28 px-6 no-scrollbar pt-6">
           
           {/* Main Character Hero Card */}
-          <div onClick={() => onNavigate(Screen.COMPANIONS)} className={`w-full aspect-[16/10] rounded-[2.5rem] bg-gradient-to-br ${theme.bgGradient} relative overflow-hidden shadow-xl mb-6 group cursor-pointer transition-transform active:scale-[0.99]`}>
-              
-              {/* Badges Overlay */}
-              <div className="absolute top-5 left-5 right-5 flex justify-between items-center z-20">
-                  <div className="flex gap-2">
-                      <div className="bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/10">
-                          <span className="size-2 bg-yellow-400 rounded-full animate-pulse"></span>
-                          <span className="text-[9px] font-black text-white uppercase tracking-widest">Live Feed</span>
-                      </div>
+          <div onClick={() => onNavigate(Screen.COMPANIONS)} className={`w-full aspect-[16/11] rounded-[2.5rem] bg-[#E5E5E5] dark:bg-[#2C2C2E] relative overflow-hidden shadow-xl mb-6 group cursor-pointer transition-transform active:scale-[0.99]`}>
+              <div className="absolute top-5 left-5 z-20">
+                  <div className="bg-black/20 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/20">
+                      <span className="size-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                      <span className="text-[9px] font-black text-white uppercase tracking-widest">Live Feed</span>
                   </div>
               </div>
 
-              <div className="absolute inset-0 bg-cover bg-top transition-transform duration-700 group-hover:scale-[1.05]" style={{ backgroundImage: `url(${character.image})` }}></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+              <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:scale-105 transition-transform duration-500">
+                   <img src={character.image} className="h-full w-full object-cover object-top" alt={character.name} />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               
-              <div className="absolute bottom-6 left-6 z-20">
-                  <h1 className="text-4xl font-black text-white uppercase leading-none tracking-tighter mb-1 drop-shadow-md">{character.name}</h1>
-                  <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold ${theme.textAccent} uppercase tracking-widest`}>{character.role}</span>
-                  </div>
+              <div className="absolute bottom-6 left-6 z-20 text-left">
+                  <h1 className="text-4xl font-black text-white uppercase leading-none tracking-tighter mb-1">{character.name}</h1>
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">{character.role}</p>
               </div>
           </div>
 
-          {/* New Duty Status Card Section */}
-          <div onClick={() => onNavigate(Screen.FASTING_TIMER)} className={`mb-6 p-6 rounded-[2.5rem] bg-white dark:bg-dark-surface shadow-md border-2 transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden ${isFasting ? 'border-blue-400/30' : 'border-orange-100 dark:border-white/5'}`}>
-              <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-4">
-                      <div className={`size-14 rounded-2xl flex items-center justify-center text-2xl shadow-inner ${isFasting ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-500'}`}>
-                          <span className="material-symbols-outlined filled">{isFasting ? 'local_police' : 'home'}</span>
-                      </div>
-                      <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Patrol Status</p>
-                          <h3 className={`text-xl font-black uppercase tracking-tight ${isFasting ? 'text-blue-600 dark:text-blue-400' : 'text-orange-500'}`}>
-                              {isFasting ? 'ON DUTY' : 'OFF DUTY'}
-                          </h3>
-                      </div>
+          {/* Patrol Status Card */}
+          <div onClick={() => onNavigate(Screen.FASTING_TIMER)} className={`mb-6 p-6 rounded-[2.5rem] bg-[#F9F9F9] dark:bg-[#1C1C1E] shadow-sm border border-gray-100 dark:border-white/5 transition-all cursor-pointer active:scale-[0.98] relative overflow-hidden`}>
+              <div className="flex items-center gap-5 relative z-10 text-left">
+                  <div className={`size-14 rounded-2xl flex items-center justify-center text-2xl bg-[#FEF3C7] dark:bg-[#2C2C2E] text-orange-600 dark:text-orange-400 shadow-sm`}>
+                      <span className="material-symbols-outlined filled">{isFasting ? 'local_police' : 'home'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                      <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Patrol Status</p>
+                      <h3 className={`text-2xl font-black uppercase tracking-tight ${isFasting ? 'text-blue-500' : 'text-[#F97316]'}`}>
+                          {isFasting ? 'ON DUTY' : 'OFF DUTY'}
+                      </h3>
                   </div>
                   {isFasting && (
-                      <div className="text-right">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Time</p>
-                          <p className="text-lg font-black text-gray-800 dark:text-white font-mono">{fastDuration}</p>
-                      </div>
+                    <div className="ml-auto text-right">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active</p>
+                        <p className="text-sm font-black text-gray-800 dark:text-white font-mono">{fastDuration}</p>
+                    </div>
                   )}
               </div>
-              {/* Background Glow */}
-              <div className={`absolute top-0 right-0 size-32 rounded-full blur-3xl opacity-10 pointer-events-none -mr-16 -mt-16 ${isFasting ? 'bg-blue-500' : 'bg-orange-500'}`}></div>
           </div>
 
-          <div className={`border-[3px] ${theme.border} ${theme.borderDark} rounded-[2.5rem] p-3 mb-6 relative`}>
-              <div className={`absolute -top-3 left-6 bg-[#f8f9fa] dark:bg-dark-bg px-2 text-[10px] font-black uppercase tracking-widest ${theme.subText} ${theme.subTextDark}`}>Daily Vitals</div>
-              <div className="grid grid-cols-2 gap-3">
-                  <div onClick={() => onNavigate(Screen.FOOD_LOG)} className="bg-[#FDFBF7] dark:bg-dark-surface rounded-[2rem] p-5 relative overflow-hidden flex flex-col justify-between h-36 shadow-sm group active:scale-95 transition-all cursor-pointer">
-                      <div className="size-10 rounded-full bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 flex items-center justify-center mb-2 z-10">
-                          <span className="material-symbols-outlined filled">donut_large</span>
+          {/* Vitals Section */}
+          <div className="border border-blue-500/10 dark:border-blue-500/20 rounded-[2.5rem] p-1.5 mb-6 bg-[#F8FAFC] dark:bg-[#0A0A0A]">
+              <div className="px-6 py-2.5 flex items-center gap-2 text-left">
+                   <h3 className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-[0.2em]">Daily Vitals</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                  {/* Fuel Card */}
+                  <div onClick={() => onNavigate(Screen.FOOD_LOG)} className="bg-white dark:bg-[#1C1C1E] rounded-[2rem] p-6 flex flex-col gap-6 shadow-sm active:scale-95 transition-all cursor-pointer h-40 text-left">
+                      <div className="relative size-12">
+                          <svg className="size-full transform -rotate-90" viewBox="0 0 40 40">
+                              <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="4" className="text-gray-100 dark:text-gray-800" />
+                              <circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray="113" strokeDashoffset={113 - (113 * caloriePercent / 100)} className="text-yellow-400 transition-all duration-1000" />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-yellow-400 text-lg filled">donut_large</span>
+                          </div>
                       </div>
-                      <div className="relative z-10">
+                      <div className="flex flex-col">
                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Fuel</p>
                           <div className="flex items-baseline gap-1">
-                              <p className="text-3xl font-black text-gray-800 dark:text-white tracking-tight">{totalCalories}</p>
-                              <span className="text-[9px] font-bold text-gray-400">/ {dailyCalorieLimit}</span>
+                              <span className="text-2xl font-black text-gray-800 dark:text-white tracking-tight">{totalCalories}</span>
+                              <span className="text-[10px] font-bold text-gray-400">/ {dailyCalorieLimit}</span>
                           </div>
                       </div>
                   </div>
-                  <div onClick={() => onNavigate(Screen.WATER_LOG)} className="bg-[#E0F2FE] dark:bg-blue-900/10 rounded-[2rem] p-5 relative overflow-hidden flex flex-col justify-between h-36 shadow-sm group active:scale-95 transition-all cursor-pointer">
-                      <div className={`size-10 rounded-full flex items-center justify-center mb-2 z-10 backdrop-blur-sm bg-white/60 dark:bg-white/10 ${theme.iconText} dark:text-white`}>
-                          <span className="material-symbols-outlined">water_drop</span>
+
+                  {/* Hydration Card */}
+                  <div onClick={() => onNavigate(Screen.WATER_LOG)} className="bg-white dark:bg-[#1C1C1E] rounded-[2rem] p-6 flex flex-col gap-6 shadow-sm active:scale-95 transition-all cursor-pointer h-40 border border-gray-50 dark:border-white/5 text-left">
+                      <div className="size-12 rounded-full flex items-center justify-center bg-blue-50 dark:bg-blue-600/10 text-blue-500">
+                          <span className="material-symbols-outlined text-3xl">water_drop</span>
                       </div>
-                      <div className="relative z-10">
-                          <p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${theme.subText} ${theme.subTextDark}`}>Hydration</p>
-                          <div className="flex items-baseline gap-1">
-                              <p className={`text-3xl font-black tracking-tight ${theme.iconText} dark:text-white`}>{displayWater}</p>
-                              <span className={`text-[10px] font-bold ${theme.subText} ${theme.subTextDark}`}>{waterUnit}</span>
+                      <div className="flex flex-col">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Hydration</p>
+                          <div className="flex items-baseline gap-0.5">
+                              <span className="text-2xl font-black text-gray-800 dark:text-white tracking-tight">{displayWater}</span>
+                              <span className="text-sm font-black text-blue-500 ml-0.5">{waterUnit}</span>
                           </div>
-                          <div className="w-full bg-white/50 dark:bg-white/10 h-1.5 mt-2 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full transition-all duration-1000 ${theme.progress}`} style={{ width: `${waterProgress}%` }}></div>
+                          <div className="w-full bg-gray-100 dark:bg-white/5 h-1 mt-2 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${waterProgress}%` }}></div>
                           </div>
                       </div>
                   </div>
               </div>
           </div>
 
-          <div className="mb-8">
-              <div className="flex items-center gap-2 mb-4 px-2"><span className="size-2 rounded-full bg-yellow-400 animate-pulse"></span><span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Control Deck</span></div>
-              <div className="grid grid-cols-3 gap-3 h-28">
-                  <DeckButton icon="monitor_weight" label="Bio" onClick={() => onNavigate(Screen.BIOMETRICS)} bg="bg-white dark:bg-dark-surface" />
-                  <DeckButton icon="self_improvement" label="Mental" onClick={() => onNavigate(Screen.MANUAL_MEDITATION)} bg="bg-white dark:bg-dark-surface" />
-                  <DeckButton icon="fitness_center" label="Active" onClick={() => onNavigate(Screen.MANUAL_WORKOUT)} bg="bg-white dark:bg-dark-surface" />
+          {/* Control Deck */}
+          <div className="mb-10 text-left">
+              <div className="flex items-center gap-2 mb-4 px-2">
+                   <span className="size-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                   <h3 className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.3em]">Control Deck</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                  <DeckButton icon="monitor_weight" label="Bio" onClick={() => onNavigate(Screen.BIOMETRICS)} />
+                  <DeckButton icon="self_improvement" label="Mental" onClick={() => onNavigate(Screen.MANUAL_MEDITATION)} />
+                  <DeckButton icon="fitness_center" label="Active" onClick={() => onNavigate(Screen.MANUAL_WORKOUT)} />
               </div>
           </div>
        </div>
     </div>
   );
 };
-const DeckButton: React.FC<{ icon: string; label: string; onClick: () => void; bg: string }> = ({ icon, label, onClick, bg }) => (
-    <button onClick={onClick} className={`${bg} rounded-[2rem] flex flex-col items-center justify-center gap-1 shadow-sm border border-gray-100 dark:border-white/5 hover:border-gray-300 active:scale-95 transition-all group`}>
-        <span className="material-symbols-outlined text-2xl text-gray-600 dark:text-gray-300 group-hover:scale-110 transition-transform">{icon}</span>
-        <span className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{label}</span>
+
+const DeckButton: React.FC<{ icon: string; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
+    <button onClick={onClick} className="bg-[#F8F9FA] dark:bg-[#1C1C1E] rounded-[2rem] h-28 flex flex-col items-center justify-center gap-2 shadow-sm border border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-[#2C2C2E] active:scale-95 transition-all group">
+        <span className="material-symbols-outlined text-2xl text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors">{icon}</span>
+        <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{label}</span>
     </button>
 );
+
 export default Home;

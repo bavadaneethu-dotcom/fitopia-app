@@ -108,37 +108,35 @@ const PlanGeneration: React.FC<PlanGenerationProps> = ({
            </div>
         </div>
 
-        {/* Daily Target Card */}
-        <div className="bg-[#F6CB45] dark:bg-yellow-600 rounded-3xl p-6 shadow-lg relative overflow-hidden transition-all duration-500">
+        {/* Daily Target Card - Updated to Lemon Yellow shade and smaller font */}
+        <div className="bg-[#FEF9C3] dark:bg-yellow-700/40 rounded-3xl p-6 shadow-lg relative overflow-hidden transition-all duration-500 border border-yellow-200/50 dark:border-yellow-600/20">
             <div className="flex justify-between items-center mb-1 relative z-10">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/40">Suggested Daily Target</span>
-                <span className="material-symbols-outlined text-black/80 text-[18px]">local_fire_department</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#854D0E] opacity-60">Suggested Daily Target</span>
+                <span className="material-symbols-outlined text-[#854D0E] text-[18px] opacity-80">local_fire_department</span>
             </div>
-            <div className="relative z-10 flex flex-col items-center sm:items-start">
-                <div className="flex items-baseline">
-                    <input 
-                        type="number" 
-                        value={calories}
-                        onChange={(e) => {
-                            const val = parseInt(e.target.value) || 0;
-                            setCalories(val);
-                        }}
-                        className="w-full bg-transparent text-6xl font-black leading-none tracking-tighter text-black outline-none appearance-none text-center sm:text-left"
-                    />
-                </div>
-                <span className="text-[10px] font-black text-black/30 uppercase tracking-widest mt-1">KCAL</span>
+            <div className="relative z-10 flex items-center justify-center sm:justify-start gap-2">
+                <input 
+                    type="number" 
+                    value={calories}
+                    onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setCalories(val);
+                    }}
+                    className="w-32 bg-transparent text-4xl font-black leading-none tracking-tighter text-[#422006] dark:text-white outline-none appearance-none text-center sm:text-left"
+                />
+                <span className="text-lg font-black text-[#854D0E] dark:text-yellow-400/60 uppercase tracking-tight self-end mb-1">kcal</span>
             </div>
             <div className="flex justify-end mt-2 relative z-10">
-                <span className="text-[8px] font-black text-black/40 uppercase tracking-widest px-2.5 py-0.5 rounded-lg bg-black/5 border border-black/5">Personalized for {userGoal}</span>
+                <span className="text-[8px] font-black text-[#854D0E] dark:text-yellow-100 opacity-60 uppercase tracking-widest px-2.5 py-0.5 rounded-lg bg-black/5 border border-black/5">Personalized for {userGoal}</span>
             </div>
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 via-transparent to-black/5 pointer-events-none"></div>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/30 via-transparent to-black/5 pointer-events-none"></div>
         </div>
 
-        {/* Nutrition Grid - Rectangular Menu Design with Square Padding and Clear Values */}
+        {/* Nutrition Grid - Reduced box sizes and added animations */}
         <div className="grid grid-cols-3 gap-2">
           {/* Protein */}
-          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 flex flex-col items-center justify-between min-h-[160px] shadow-sm border border-slate-100 dark:border-white/5">
-              <span className="text-5xl">🥩</span>
+          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[115px] shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="text-3xl mb-2 animate-float" style={{ animationDuration: '3s' }}>🥩</span>
               <div className="flex flex-col items-center w-full">
                 <div className="flex items-baseline justify-center gap-1 w-full">
                     <input 
@@ -148,17 +146,17 @@ const PlanGeneration: React.FC<PlanGenerationProps> = ({
                             setProtein(parseInt(e.target.value) || 0);
                             setIsProteinOverridden(true);
                         }}
-                        className="w-full max-w-[60px] bg-transparent text-2xl font-black text-gray-900 dark:text-white leading-none text-center outline-none"
+                        className="w-full max-w-[45px] bg-transparent text-lg font-black text-gray-900 dark:text-white leading-none text-center outline-none"
                     />
-                    <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase">G</span>
+                    <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase">G</span>
                 </div>
-                <span className="text-[9px] font-black text-gray-400 mt-1 uppercase tracking-widest whitespace-nowrap">Protein</span>
+                <span className="text-[7px] font-black text-gray-400 mt-0.5 uppercase tracking-widest whitespace-nowrap">Protein</span>
               </div>
           </div>
 
           {/* Fiber */}
-          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 flex flex-col items-center justify-between min-h-[160px] shadow-sm border border-slate-100 dark:border-white/5">
-              <span className="text-5xl">🥕</span>
+          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[115px] shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="text-3xl mb-2 animate-float" style={{ animationDuration: '4s', animationDelay: '0.5s' }}>🥕</span>
               <div className="flex flex-col items-center w-full">
                 <div className="flex items-baseline justify-center gap-1 w-full">
                     <input 
@@ -168,17 +166,17 @@ const PlanGeneration: React.FC<PlanGenerationProps> = ({
                             setFiber(parseInt(e.target.value) || 0);
                             setIsFiberOverridden(true);
                         }}
-                        className="w-full max-w-[60px] bg-transparent text-2xl font-black text-gray-900 dark:text-white leading-none text-center outline-none"
+                        className="w-full max-w-[45px] bg-transparent text-lg font-black text-gray-900 dark:text-white leading-none text-center outline-none"
                     />
-                    <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase">G</span>
+                    <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase">G</span>
                 </div>
-                <span className="text-[9px] font-black text-gray-400 mt-1 uppercase tracking-widest whitespace-nowrap">Fiber</span>
+                <span className="text-[7px] font-black text-gray-400 mt-0.5 uppercase tracking-widest whitespace-nowrap">Fiber</span>
               </div>
           </div>
 
           {/* Water */}
-          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 flex flex-col items-center justify-between min-h-[160px] shadow-sm border border-slate-100 dark:border-white/5">
-              <span className="text-5xl">💧</span>
+          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-3 flex flex-col items-center justify-center min-h-[115px] shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="text-3xl mb-2 animate-float" style={{ animationDuration: '5s', animationDelay: '1s' }}>💧</span>
               <div className="flex flex-col items-center w-full">
                 <div className="flex items-baseline justify-center gap-1 w-full">
                     <input 
@@ -189,16 +187,16 @@ const PlanGeneration: React.FC<PlanGenerationProps> = ({
                             setWater(parseFloat(e.target.value) || 0);
                             setIsWaterOverridden(true);
                         }}
-                        className="w-full max-w-[60px] bg-transparent text-2xl font-black text-gray-900 dark:text-white leading-none text-center outline-none"
+                        className="w-full max-w-[45px] bg-transparent text-lg font-black text-gray-900 dark:text-white leading-none text-center outline-none"
                     />
-                    <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase">L</span>
+                    <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase">L</span>
                 </div>
-                <span className="text-[9px] font-black text-gray-400 mt-1 uppercase tracking-widest whitespace-nowrap">Water</span>
+                <span className="text-[7px] font-black text-gray-400 mt-0.5 uppercase tracking-widest whitespace-nowrap">Water</span>
               </div>
           </div>
         </div>
 
-        {/* Fasting Window - Uniform Rectangular Styling */}
+        {/* Fasting Window */}
         <div className={`rounded-2xl p-6 shadow-sm relative overflow-hidden transition-all duration-300 bg-slate-50 dark:bg-gray-800 border border-slate-100 dark:border-white/5`}>
           <div className="flex items-center justify-between mb-5 relative z-10">
             <div className="flex items-center gap-4">
