@@ -32,6 +32,7 @@ export const api = {
                         .insert([
                             {
                                 id: data.user.id,
+                                email: email,
                                 name: name,
                                 stats: {},
                                 character: {},

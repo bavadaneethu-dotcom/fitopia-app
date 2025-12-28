@@ -2,6 +2,7 @@
 -- 1. Profiles Table
 create table if not exists public.profiles (
   id uuid references auth.users not null primary key,
+  email text,
   name text,
   stats jsonb,
   character jsonb,
@@ -26,8 +27,8 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, name, stats, character, inventory)
-  values (new.id, new.raw_user_meta_data ->> 'name', '{}'::jsonb, '{}'::jsonb, '[]'::jsonb)
+  insert into public.profiles (id, email, name, stats, character, inventory)
+  values (new.id, new.email, new.raw_user_meta_data ->> 'name', '{}'::jsonb, '{}'::jsonb, '[]'::jsonb)
   on conflict (id) do nothing; -- Prevent error if profile exists
   return new;
 end;
