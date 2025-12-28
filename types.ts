@@ -83,6 +83,22 @@ export interface FastingLog {
   date: string;
 }
 
+export interface Dimensions {
+  waist: string;
+  chest: string;
+  arms: string;
+  thighs: string;
+  unit: 'cm' | 'in';
+}
+
+export interface WeightLog {
+  id: string;
+  date: string;
+  value: string;
+  unit: 'kg' | 'lbs';
+  dimensions: Dimensions;
+}
+
 export interface Character {
   id: string;
   name: string;

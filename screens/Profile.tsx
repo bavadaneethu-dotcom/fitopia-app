@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Screen, Character, UserStats, ActivityLog } from '../types';
+import { Screen, Character, UserStats, ActivityLog, WeightLog } from '../types';
 
 interface ProfileProps {
   onNavigate: (screen: Screen) => void;
@@ -9,9 +9,10 @@ interface ProfileProps {
   unitSystem: 'metric' | 'imperial';
   workoutLogs: ActivityLog[];
   meditationLogs: ActivityLog[];
+  weightLogs: WeightLog[];
 }
 
-const Profile: React.FC<ProfileProps> = ({ onNavigate, userStats, activeCharacter, unitSystem, workoutLogs, meditationLogs }) => {
+const Profile: React.FC<ProfileProps> = ({ onNavigate, userStats, activeCharacter, unitSystem, workoutLogs, meditationLogs, weightLogs }) => {
   const [showId, setShowId] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -26,14 +27,19 @@ const Profile: React.FC<ProfileProps> = ({ onNavigate, userStats, activeCharacte
   const genderLabel = userStats.gender ? userStats.gender.toUpperCase() : 'MALE';
   const partnerName = activeCharacter.name.toUpperCase();
 
+  // Latest weight logic
+  const latestWeightLog = weightLogs.length > 0 ? weightLogs[0] : null;
+  const currentWeight = latestWeightLog ? latestWeightLog.value : userStats.weight;
+  const initialWeight = userStats.weight;
+
   // Performance Calculations
   const missionCount = workoutLogs.length;
   const academyXP = activeCharacter.xp;
   const streakDays = 5; // Derived or mock value
 
-  // BMI Calculation
+  // BMI Calculation using CURRENT weight
   const bmiData = useMemo(() => {
-    let weightKg = parseFloat(userStats.weight) || 70;
+    let weightKg = parseFloat(currentWeight) || 70;
     
     // Handle Imperial to Metric conversion for standard BMI formula
     if (unitSystem === 'imperial') {
@@ -52,10 +58,10 @@ const Profile: React.FC<ProfileProps> = ({ onNavigate, userStats, activeCharacte
 
     const bmi = weightKg / (heightM * heightM);
     return { bmi: bmi.toFixed(1) };
-  }, [userStats.weight, userStats.height, unitSystem]);
+  }, [currentWeight, userStats.height, unitSystem]);
 
-  const displayWeight = userStats.weight || '165';
   const displayHeight = userStats.height || "5'10";
+  const weightUnit = unitSystem === 'metric' ? 'kg' : 'lbs';
 
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text font-sans animate-fade-in transition-colors duration-300">
@@ -192,10 +198,17 @@ const Profile: React.FC<ProfileProps> = ({ onNavigate, userStats, activeCharacte
                   </div>
                   
                   <div className="flex flex-col items-center flex-1 mx-4">
-                      <span className="text-[8px] font-black text-gray-400 dark:text-dark-muted uppercase tracking-widest mb-2">Weight</span>
+                      <span className="text-[8px] font-black text-gray-400 dark:text-dark-muted uppercase tracking-widest mb-2">Initial Mass</span>
                       <div className="flex items-baseline justify-center gap-1">
-                          <span className="text-2xl font-black text-gray-800 dark:text-white tracking-tighter">{displayWeight}</span>
-                          <span className="text-[8px] font-bold text-gray-400 uppercase">{unitSystem === 'metric' ? 'kg' : 'lbs'}</span>
+                          <span className="text-lg font-black text-gray-400 dark:text-gray-500 tracking-tighter">{initialWeight}</span>
+                          <span className="text-[7px] font-bold text-gray-400 uppercase">{weightUnit}</span>
+                      </div>
+                      <div className="mt-3 flex flex-col items-center">
+                        <span className="text-[8px] font-black text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-1">Current</span>
+                        <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-2xl font-black text-gray-800 dark:text-white tracking-tighter">{currentWeight}</span>
+                            <span className="text-[8px] font-bold text-gray-400 uppercase">{weightUnit}</span>
+                        </div>
                       </div>
                   </div>
                   

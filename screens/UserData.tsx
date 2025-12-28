@@ -37,66 +37,45 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
   };
 
   const handleDateChange = (part: 'd' | 'm' | 'y', value: string) => {
-      // Only allow digits
       if (!/^\d*$/.test(value)) return;
-
       let d = part === 'd' ? value : dobDay;
       let m = part === 'm' ? value : dobMonth;
       let y = part === 'y' ? value : dobYear;
-
       if (part === 'd') {
           if (value.length > 2) return;
           const valNum = parseInt(value);
-          
-          // STRICT VALIDATION: Day must be between 1 and 31
           if (!isNaN(valNum)) {
-              if (valNum > 31) return; // Prevent input greater than 31
-              if (value === '00') return; // Prevent 00
+              if (valNum > 31) return;
+              if (value === '00') return;
           }
-
           d = value;
-          // Auto-focus next
           if (value.length === 2) monthRef.current?.focus();
       }
-
       if (part === 'm') {
           if (value.length > 2) return;
           const valNum = parseInt(value);
-
-          // STRICT VALIDATION: Month must be between 1 and 12
           if (!isNaN(valNum)) {
-              if (valNum > 12) return; // Prevent input greater than 12
-              if (value === '00') return; // Prevent 00
+              if (valNum > 12) return;
+              if (value === '00') return;
           }
-
           m = value;
-          // Auto-focus next
           if (value.length === 2) yearRef.current?.focus();
       }
-
       if (part === 'y') {
           if (value.length > 4) return;
           y = value;
       }
-
-      // Update state
       if (part === 'd') setDobDay(d);
       if (part === 'm') setDobMonth(m);
       if (part === 'y') setDobYear(y);
-
-      // Update main userStats object
       const newDob = `${y}-${m}-${d}`;
       updateStats('dob', newDob);
-
-      // Calculate Age automatically if date is valid
       if (y.length === 4 && m.length >= 1 && d.length >= 1) {
           const yearNum = parseInt(y);
           const monthNum = parseInt(m) - 1;
           const dayNum = parseInt(d);
-          
           const birthDate = new Date(yearNum, monthNum, dayNum);
           const today = new Date();
-          
           if (!isNaN(birthDate.getTime()) && birthDate.getFullYear() === yearNum) {
               let age = today.getFullYear() - birthDate.getFullYear();
               const mDiff = today.getMonth() - birthDate.getMonth();
@@ -141,7 +120,6 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
     let color = '';
     let quote = '';
     let character = '';
-
     if (score < 18.5) {
         label = 'Underweight';
         color = 'text-blue-500';
@@ -178,15 +156,9 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
             >
               <span className="material-symbols-outlined text-gray-800 dark:text-white text-xl">arrow_back</span>
             </button>
-            
-            <div className="px-4 py-1.5">
-                <span className="text-[10px] font-black text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">Step 2 of 5</span>
-            </div>
-
+            <div className="px-4 py-1.5"><span className="text-[10px] font-black text-indigo-400 dark:text-indigo-300 uppercase tracking-[0.2em]">Step 2 of 5</span></div>
             <div className="size-12"></div> 
         </div>
-
-        {/* Progress Bar */}
         <div className="flex gap-2 mb-2">
             <div className="h-1.5 w-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></div>
             <div className="h-1.5 w-8 rounded-full bg-yellow-400 shadow-sm"></div>
@@ -196,139 +168,64 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
         </div>
       </div>
 
-      {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-36">
-
-        {/* Intro Text */}
+      <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-44">
         <div className="py-2 mt-4">
-          <h1 className="text-[34px] font-black text-center text-[#4A4A4A] dark:text-white leading-[0.95] tracking-tight mb-6">
-            Confirm your <br/> <span className="text-[#6D5D4B] dark:text-gray-400">identity</span>
-          </h1>
-          
+          <h1 className="text-[34px] font-black text-center text-[#4A4A4A] dark:text-white leading-[0.95] tracking-tight mb-6">Confirm your <br/> <span className="text-[#6D5D4B] dark:text-gray-400">identity</span></h1>
           <div className="flex gap-4 bg-[#F9F9F9] dark:bg-white/5 p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm mb-6">
              <div className="size-10 rounded-full bg-cover bg-top border-2 border-yellow-400 shrink-0" style={{ backgroundImage: `url("${activeCharacter?.image}")` }}></div>
-             <p className="text-sm font-bold leading-relaxed text-gray-600 dark:text-gray-300 italic">
-               "{activeCharacter?.onboardingMessages.dataSetup || "I need your stats for the ZPD files. Accuracy matters!"}"
-             </p>
+             <p className="text-sm font-bold leading-relaxed text-gray-600 dark:text-gray-300 italic">"{activeCharacter?.onboardingMessages.dataSetup || "I need your stats for the ZPD files. Accuracy matters!"}"</p>
           </div>
         </div>
 
-        {/* Form Fields */}
         <div className="flex flex-col gap-6">
-
-          {/* Name Input */}
           <div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Cadet Identity</h3>
             <div className="relative flex items-center bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16">
               <span className="pl-6 material-symbols-outlined text-gray-400">badge</span>
-              <input
-                className="w-full h-full bg-transparent border-none px-4 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 dark:placeholder:text-gray-600 outline-none"
-                placeholder="Nick Wilde"
-                type="text"
-                value={userStats.name}
-                onChange={(e) => updateStats('name', e.target.value)}
-              />
+              <input className="w-full h-full bg-transparent border-none px-4 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 dark:placeholder:text-gray-600 outline-none" placeholder="Nick Wilde" type="text" value={userStats.name} onChange={(e) => updateStats('name', e.target.value)} />
             </div>
           </div>
 
-          {/* Date of Birth Input */}
           <div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Date of Origin</h3>
             <div className="flex gap-3">
-                {/* Day */}
                 <div className="relative flex-1 bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16 group">
-                    <input
-                        ref={dayRef}
-                        className="w-full h-full bg-transparent border-none px-4 text-center text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none"
-                        placeholder="DD"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={dobDay}
-                        onChange={(e) => handleDateChange('d', e.target.value)}
-                    />
+                    <input ref={dayRef} className="w-full h-full bg-transparent border-none px-4 text-center text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none" placeholder="DD" type="text" inputMode="numeric" maxLength={2} value={dobDay} onChange={(e) => handleDateChange('d', e.target.value)} />
                     <span className="absolute bottom-1 w-full text-center text-[8px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">Day</span>
                 </div>
-                
-                {/* Month */}
                 <div className="relative flex-1 bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16 group">
-                    <input
-                        ref={monthRef}
-                        className="w-full h-full bg-transparent border-none px-4 text-center text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none"
-                        placeholder="MM"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={2}
-                        value={dobMonth}
-                        onChange={(e) => handleDateChange('m', e.target.value)}
-                    />
+                    <input ref={monthRef} className="w-full h-full bg-transparent border-none px-4 text-center text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none" placeholder="MM" type="text" inputMode="numeric" maxLength={2} value={dobMonth} onChange={(e) => handleDateChange('m', e.target.value)} />
                     <span className="absolute bottom-1 w-full text-center text-[8px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">Month</span>
                 </div>
-
-                {/* Year */}
                 <div className="relative flex-[1.5] bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16 group">
-                    <input
-                        ref={yearRef}
-                        className="w-full h-full bg-transparent border-none px-4 text-center text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none"
-                        placeholder="YYYY"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={4}
-                        value={dobYear}
-                        onChange={(e) => handleDateChange('y', e.target.value)}
-                    />
+                    <input ref={yearRef} className="w-full h-full bg-transparent border-none px-4 text-center text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none" placeholder="YYYY" type="text" inputMode="numeric" maxLength={4} value={dobYear} onChange={(e) => handleDateChange('y', e.target.value)} />
                     <span className="absolute bottom-1 w-full text-center text-[8px] font-bold text-gray-400 uppercase tracking-widest pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">Year</span>
                 </div>
             </div>
           </div>
 
-          {/* Gender */}
           <div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Biological Classification</h3>
             <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => updateStats('gender', 'male')}
-                className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all shadow-sm ${
-                  userStats.gender === 'male'
-                    ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
-                    : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
-                }`}
-              >
+              <button onClick={() => updateStats('gender', 'male')} className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all shadow-sm ${userStats.gender === 'male' ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'}`}>
                 <span className={`material-symbols-outlined text-[32px] ${userStats.gender === 'male' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-400'}`}>male</span>
                 <span className={`font-bold ${userStats.gender === 'male' ? 'text-yellow-700 dark:text-yellow-300' : 'text-gray-500'}`}>Male</span>
               </button>
-              <button
-                onClick={() => updateStats('gender', 'female')}
-                className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all shadow-sm ${
-                  userStats.gender === 'female'
-                    ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20'
-                    : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'
-                }`}
-              >
+              <button onClick={() => updateStats('gender', 'female')} className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all shadow-sm ${userStats.gender === 'female' ? 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-transparent bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10'}`}>
                 <span className={`material-symbols-outlined text-[32px] ${userStats.gender === 'female' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-400'}`}>female</span>
                 <span className={`font-bold ${userStats.gender === 'female' ? 'text-yellow-700 dark:text-yellow-300' : 'text-gray-500'}`}>Female</span>
               </button>
             </div>
           </div>
 
-          {/* Age */}
           <div>
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Age</h3>
             <div className="relative flex items-center bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16">
-              <input
-                className="w-full h-full bg-transparent border-none px-6 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none"
-                placeholder="25"
-                type="number"
-                value={userStats.age}
-                onChange={handleAgeChange}
-                maxLength={3}
-                max="999"
-              />
+              <input className="w-full h-full bg-transparent border-none px-6 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none" placeholder="25" type="number" value={userStats.age} onChange={handleAgeChange} maxLength={3} max="999" />
               <span className="pr-6 text-gray-400 font-bold text-sm uppercase tracking-wide">years</span>
             </div>
           </div>
 
-          {/* Height */}
           <div>
             <div className="flex justify-between items-end mb-2 ml-1">
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Vertical Clearance</h3>
@@ -338,17 +235,10 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
               </div>
             </div>
             <div className="relative flex items-center bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16">
-              <input
-                className="w-full h-full bg-transparent border-none px-6 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none"
-                placeholder={heightUnit === 'FT' ? "5'10" : "178"}
-                type={heightUnit === 'CM' ? "number" : "text"}
-                value={userStats.height}
-                onChange={(e) => updateStats('height', e.target.value)}
-              />
+              <input className="w-full h-full bg-transparent border-none px-6 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none" placeholder={heightUnit === 'FT' ? "5'10" : "178"} type={heightUnit === 'CM' ? "number" : "text"} value={userStats.height} onChange={(e) => updateStats('height', e.target.value)} />
             </div>
           </div>
 
-          {/* Weight */}
           <div>
             <div className="flex justify-between items-end mb-2 ml-1">
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Physical Mass</h3>
@@ -358,18 +248,11 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
               </div>
             </div>
             <div className="relative flex items-center bg-gray-50 dark:bg-white/5 rounded-2xl overflow-hidden border-2 border-transparent focus-within:border-yellow-400 transition-colors h-16">
-              <input
-                className="w-full h-full bg-transparent border-none px-6 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none"
-                placeholder="70"
-                type="number"
-                value={userStats.weight}
-                onChange={(e) => updateStats('weight', e.target.value)}
-              />
+              <input className="w-full h-full bg-transparent border-none px-6 text-xl font-bold text-gray-800 dark:text-white focus:ring-0 placeholder:text-gray-300 outline-none" placeholder="70" type="number" value={userStats.weight} onChange={(e) => updateStats('weight', e.target.value)} />
               <span className="pr-6 text-gray-400 font-bold text-sm uppercase tracking-wide">{weightUnit}</span>
             </div>
           </div>
 
-          {/* BMI Card */}
           {bmiData && (
             <div className="bg-[#fdfbf7] dark:bg-[#1a202c] rounded-2xl p-5 border-2 border-dashed border-gray-300 dark:border-gray-600 relative overflow-hidden">
                 <div className="flex justify-between items-center relative z-10">
@@ -386,12 +269,11 @@ const UserData: React.FC<UserDataProps> = ({ onNavigate, activeCharacter, userSt
                 </div>
             </div>
           )}
-
         </div>
       </div>
 
       {/* Footer CTA */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] z-30 pt-16">
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] z-30 pt-16 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
         <button
           onClick={() => onNavigate(Screen.GOAL_SELECTION)}
           className="flex w-full items-center justify-center rounded-full h-16 bg-[#FACC15] hover:bg-yellow-300 text-black font-black text-sm uppercase tracking-widest shadow-xl shadow-yellow-400/20 active:scale-[0.98] transition-all gap-3"

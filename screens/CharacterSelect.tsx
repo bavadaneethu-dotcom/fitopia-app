@@ -22,7 +22,7 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
     <div className="relative flex h-full min-h-screen w-full flex-col overflow-hidden bg-white dark:bg-[#1a1a1a] text-light-text dark:text-white font-sans transition-colors duration-300">
       
       {/* Header Section */}
-      <div className="flex flex-col items-center w-full pt-8 px-6 relative z-20">
+      <div className="flex flex-col items-center w-full pt-8 px-6 relative z-20 bg-white dark:bg-[#1a1a1a]">
         <div className="w-full flex items-center justify-between mb-4">
             <button 
               onClick={() => onNavigate(Screen.SIGNUP)}
@@ -49,7 +49,7 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
       </div>
 
       {/* Main Content Scrollable */}
-      <div className="flex-1 flex flex-col items-center w-full overflow-y-auto no-scrollbar relative z-0 pb-36">
+      <div className="flex-1 flex flex-col items-center w-full overflow-y-auto no-scrollbar relative z-0 pb-44">
         
         <h1 className="text-[34px] font-black text-center text-[#4A4A4A] dark:text-white leading-[0.95] tracking-tight mt-4 mb-8 drop-shadow-sm">
           Who is training <br/> <span className="text-[#6D5D4B] dark:text-gray-400">with you?</span>
@@ -61,7 +61,6 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
                 key={activeCharacter.id}
                 className="absolute inset-0 rounded-[2.5rem] overflow-hidden bg-white dark:bg-gray-800 shadow-2xl shadow-black/20 dark:shadow-black/50 border border-white/50 dark:border-white/5 animate-card-enter"
             >
-                {/* Background Gradient/Color based on character */}
                 <div className={`absolute inset-0 bg-gradient-to-b ${
                     activeCharacter.themeColor === 'blue' ? 'from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-900/60' :
                     activeCharacter.themeColor === 'green' ? 'from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-900/60' :
@@ -117,12 +116,8 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
                             onClick={() => setActiveCharacter(char)}
                             className="flex flex-col items-center gap-2 group focus:outline-none shrink-0"
                         >
-                            {/* Avatar Container with perfectly concentric ring */}
                             <div className="relative p-[4px]">
-                                {/* Active Ring */}
                                 <div className={`absolute inset-0 rounded-full border-[3px] transition-all duration-300 ${isActive ? 'border-yellow-400 opacity-100' : 'border-transparent opacity-0 scale-90'}`}></div>
-                                
-                                {/* Image */}
                                 <div className={`size-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 relative z-10 transition-all duration-300 border-2 ${isActive ? 'border-white' : 'border-transparent grayscale opacity-60 hover:opacity-100 hover:grayscale-0'}`}>
                                     <img 
                                       src={char.image} 
@@ -130,15 +125,12 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
                                       className="w-full h-full object-cover object-top" 
                                     />
                                 </div>
-
-                                {/* Checkmark Badge */}
                                 {isActive && (
                                     <div className="absolute bottom-0 right-0 bg-yellow-400 text-black rounded-full size-5 flex items-center justify-center border-2 border-white dark:border-gray-800 z-20 shadow-sm animate-pop-in">
                                         <span className="material-symbols-outlined text-[12px] font-bold">check</span>
                                     </div>
                                 )}
                             </div>
-                            
                             <span className={`text-[9px] font-black uppercase tracking-wider transition-colors ${isActive ? 'text-black dark:text-yellow-400' : 'text-gray-400'}`}>
                                 {char.name.split(' ')[0]}
                             </span>
@@ -151,7 +143,7 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
       </div>
 
       {/* Footer CTA */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] z-30 pt-16">
+      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white to-transparent dark:from-[#1a1a1a] dark:via-[#1a1a1a] z-30 pt-16 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
           <button 
             onClick={() => onNavigate(Screen.USER_DATA)}
             className="w-full h-16 rounded-full bg-[#FACC15] hover:bg-yellow-300 text-black font-black text-sm uppercase tracking-widest shadow-xl shadow-yellow-400/20 flex items-center justify-center gap-3 transition-transform hover:scale-[1.02] active:scale-[0.98] group"
@@ -176,7 +168,7 @@ const CharacterSelect: React.FC<CharacterSelectProps> = ({ activeCharacter, setA
         }
         .animate-slide-up {
             animation: slide-up 0.4s ease-out forwards;
-            opacity: 0; /* Initial state handled by animation */
+            opacity: 0;
         }
         @keyframes pop-in {
             0% { transform: scale(0); }

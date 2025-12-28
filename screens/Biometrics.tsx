@@ -1,29 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import { Screen } from '../types';
-
-interface Dimensions {
-  waist: string;
-  chest: string;
-  arms: string;
-  thighs: string;
-  unit: 'cm' | 'in';
-}
-
-interface WeightLog {
-  id: string;
-  date: string;
-  value: string;
-  unit: 'kg' | 'lbs';
-  dimensions: Dimensions;
-}
+import { Screen, WeightLog, Dimensions } from '../types';
 
 interface BiometricsProps {
   onNavigate: (screen: Screen) => void;
   unitSystem: 'metric' | 'imperial';
+  weightLogs: WeightLog[];
+  setWeightLogs: React.Dispatch<React.SetStateAction<WeightLog[]>>;
 }
 
-const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
+const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem, weightLogs, setWeightLogs }) => {
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>(unitSystem === 'metric' ? 'kg' : 'lbs');
   const [lengthUnit, setLengthUnit] = useState<'cm' | 'in'>(unitSystem === 'metric' ? 'cm' : 'in');
   const [weight, setWeight] = useState('75');
@@ -34,7 +20,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
     thighs: unitSystem === 'metric' ? '56' : '22',
   });
   
-  const [weightHistory, setWeightHistory] = useState<WeightLog[]>([]);
   const [isEditingMeasures, setIsEditingMeasures] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [editingLog, setEditingLog] = useState<WeightLog | null>(null);
@@ -95,7 +80,7 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
       };
       
       setTimeout(() => { 
-        setWeightHistory(prev => [newLog, ...prev]);
+        setWeightLogs(prev => [newLog, ...prev]);
         setSaveStatus('success'); 
         setIsEditingMeasures(false); 
         setTimeout(() => setSaveStatus('idle'), 2000); 
@@ -103,7 +88,7 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
   };
 
   const handleUpdateLog = (updatedLog: WeightLog) => {
-      setWeightHistory(prev => prev.map(log => log.id === updatedLog.id ? updatedLog : log));
+      setWeightLogs(prev => prev.map(log => log.id === updatedLog.id ? updatedLog : log));
       setEditingLog(null);
   };
 
@@ -128,7 +113,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
 
       <div className="flex-1 px-6 pt-8 pb-32 flex flex-col gap-8 overflow-y-auto no-scrollbar">
           
-          {/* Body Mass Indexing Container */}
           <div className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md rounded-[2.5rem] p-1 shadow-lg border border-white/60 dark:border-white/5">
               <div className="flex justify-between items-center px-6 py-4 bg-gray-100/50 dark:bg-white/5 rounded-t-[2.2rem]">
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400">Body Mass Indexing</h3>
@@ -157,7 +141,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
               </div>
           </div>
 
-          {/* Physical Dimensions Container */}
           <div className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md rounded-[2.5rem] p-1 shadow-lg border border-white/60 dark:border-white/5">
               <div className="flex justify-between items-center px-6 py-4 bg-gray-100/50 dark:bg-white/5 rounded-t-[2.2rem]">
                   <div className="flex items-center gap-2">
@@ -209,7 +192,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
               </div>
           </div>
 
-          {/* Weight History Section */}
           <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 px-2">
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Patrol Weight Logs</span>
@@ -217,13 +199,13 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
               </div>
               
               <div className="flex flex-col gap-3">
-                  {weightHistory.length === 0 ? (
+                  {weightLogs.length === 0 ? (
                       <div className="py-12 flex flex-col items-center justify-center gap-2 opacity-30">
                           <span className="material-symbols-outlined text-4xl">history</span>
                           <p className="text-[10px] font-bold uppercase tracking-widest">No patrol logs found</p>
                       </div>
                   ) : (
-                      weightHistory.map((log) => (
+                      weightLogs.map((log) => (
                           <div key={log.id} className="bg-white/60 dark:bg-dark-surface/60 backdrop-blur-md p-4 rounded-2xl border border-white/60 dark:border-white/5 shadow-sm flex items-center justify-between animate-fade-in-up">
                               <div className="flex items-center gap-4">
                                   <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500">
@@ -250,7 +232,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
           </div>
       </div>
 
-      {/* Global Sync Button */}
       <div className="fixed bottom-0 left-0 right-0 p-6 z-30 bg-gradient-to-t from-gray-50 dark:from-dark-bg to-transparent">
           <div className="max-w-md mx-auto w-full">
               <button 
@@ -270,7 +251,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
           </div>
       </div>
 
-      {/* History Edit Modal */}
       {editingLog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-6 animate-fade-in" onClick={() => setEditingLog(null)}>
             <div className="bg-white dark:bg-dark-surface w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative border-2 border-blue-400 animate-pop-in" onClick={e => e.stopPropagation()}>
@@ -286,7 +266,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
                 </div>
 
                 <div className="space-y-6">
-                    {/* Weight Edit */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Mass Record ({editingLog.unit})</label>
                         <input 
@@ -297,7 +276,6 @@ const Biometrics: React.FC<BiometricsProps> = ({ onNavigate, unitSystem }) => {
                         />
                     </div>
 
-                    {/* Dimensions Edit */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Physical Dimensions ({editingLog.dimensions.unit})</label>
                         <div className="grid grid-cols-2 gap-3">
