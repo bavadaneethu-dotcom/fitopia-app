@@ -72,18 +72,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigate }) => {
       if (error) throw error;
 
       if (data.user) {
-        // Create Profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            { id: data.user.id, name: '', stats: {}, character: {}, inventory: [] }
-          ]);
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-          // Verify if we should block or continue. For now continue.
-        }
-
+        // Profile creation is handled by Supabase Database Trigger
         onNavigate(Screen.CHARACTER_SELECT);
       }
     } catch (err: any) {
@@ -167,8 +156,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigate }) => {
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className={`w-full bg-gray-50 dark:bg-white/5 border-2 focus:bg-white dark:focus:bg-black/20 focus:ring-0 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium text-light-text dark:text-dark-text outline-none transition-all ${errors.email
-                      ? 'border-red-300 focus:border-red-500 bg-red-50/50'
-                      : 'border-transparent focus:border-yellow-400 placeholder:text-gray-300'
+                    ? 'border-red-300 focus:border-red-500 bg-red-50/50'
+                    : 'border-transparent focus:border-yellow-400 placeholder:text-gray-300'
                     }`}
                   placeholder="name@example.com"
                   type="email"
@@ -187,8 +176,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigate }) => {
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   className={`w-full bg-gray-50 dark:bg-white/5 border-2 focus:bg-white dark:focus:bg-black/20 focus:ring-0 rounded-2xl py-3.5 pl-12 pr-12 text-sm font-medium text-light-text dark:text-dark-text outline-none transition-all ${errors.password
-                      ? 'border-red-300 focus:border-red-500 bg-red-50/50'
-                      : 'border-transparent focus:border-yellow-400 placeholder:text-gray-300'
+                    ? 'border-red-300 focus:border-red-500 bg-red-50/50'
+                    : 'border-transparent focus:border-yellow-400 placeholder:text-gray-300'
                     }`}
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
@@ -214,8 +203,8 @@ const Signup: React.FC<SignupProps> = ({ onNavigate }) => {
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   className={`w-full bg-gray-50 dark:bg-white/5 border-2 focus:bg-white dark:focus:bg-black/20 focus:ring-0 rounded-2xl py-3.5 pl-12 pr-12 text-sm font-medium text-light-text dark:text-dark-text outline-none transition-all ${errors.confirmPassword
-                      ? 'border-red-300 focus:border-red-500 bg-red-50/50'
-                      : 'border-transparent focus:border-yellow-400 placeholder:text-gray-300'
+                    ? 'border-red-300 focus:border-red-500 bg-red-50/50'
+                    : 'border-transparent focus:border-yellow-400 placeholder:text-gray-300'
                     }`}
                   placeholder="••••••••"
                   type={showConfirmPassword ? "text" : "password"}

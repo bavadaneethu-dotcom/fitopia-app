@@ -1,5 +1,3 @@
--- Enable Row Level Security (RLS)
-alter table auth.users enable row level security;
 
 -- 1. Profiles Table
 create table public.profiles (
@@ -14,6 +12,24 @@ alter table public.profiles enable row level security;
 create policy "Users can view own profile" on profiles for select using (auth.uid() = id);
 create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
 create policy "Users can insert own profile" on profiles for insert with check (auth.uid() = id);
+
+-- Function to handle new user creation
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, name, stats, character, inventory)
+  values (new.id, new.raw_user_meta_data ->> 'name', '{}'::jsonb, '{}'::jsonb, '[]'::jsonb);
+  return new;
+end;
+$$;
+
+-- Trigger to call the function on signup
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 
 -- 2. Activity Logs (Workouts & Meditations)
 create table public.activity_logs (
