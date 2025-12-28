@@ -21,7 +21,7 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
+//sfdsfdsfsdf
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
