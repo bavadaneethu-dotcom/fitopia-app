@@ -90,14 +90,14 @@ export const api = {
     },
 
     logs: {
-        // Fetch all logs for a given date (or all if no date provided)
-        getByDate: async (userId: string, date: string) => {
+        // Fetch ALL logs for a user (needed for Profile stats, Analytics, and seamless date switching)
+        getAll: async (userId: string) => {
             const [activity, food, water, fasting, weight] = await Promise.all([
-                supabase.from('activity_logs').select('*').eq('user_id', userId).eq('date', date),
-                supabase.from('food_logs').select('*').eq('user_id', userId).eq('date', date),
-                supabase.from('water_logs').select('*').eq('user_id', userId).eq('date', date),
-                supabase.from('fasting_logs').select('*').eq('user_id', userId).eq('date', date),
-                supabase.from('weight_logs').select('*').eq('user_id', userId).eq('date', date)
+                supabase.from('activity_logs').select('*').eq('user_id', userId).order('date', { ascending: false }),
+                supabase.from('food_logs').select('*').eq('user_id', userId).order('date', { ascending: false }),
+                supabase.from('water_logs').select('*').eq('user_id', userId).order('date', { ascending: false }),
+                supabase.from('fasting_logs').select('*').eq('user_id', userId).order('date', { ascending: false }),
+                supabase.from('weight_logs').select('*').eq('user_id', userId).order('date', { ascending: false })
             ]);
 
             if (activity.error) throw activity.error;

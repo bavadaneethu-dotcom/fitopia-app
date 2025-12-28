@@ -231,9 +231,8 @@ const App: React.FC = () => {
             // Fasting State from Profile (if stored there) or default
           }
 
-          // Fetch Logs for selected Date
-          const dateKey = formatDateKey(selectedDate);
-          const logs = await api.logs.getByDate(user.id, dateKey);
+          // Fetch ALL Logs to populate history (Home will filter by date)
+          const logs = await api.logs.getAll(user.id);
 
           setWorkoutLogs(logs.activity.filter((l: any) => l.type === 'workout'));
           setMeditationLogs(logs.activity.filter((l: any) => l.type === 'meditation'));
@@ -250,7 +249,7 @@ const App: React.FC = () => {
       }
     };
     loadData();
-  }, [selectedDate]); // Re-fetch when date changes
+  }, []); // Run only on mount (or when auth state changes if we added that dep, but separate effect handles auth init)
 
   useEffect(() => {
     if (isDarkMode) {
