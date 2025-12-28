@@ -27,7 +27,6 @@
     "noEmit": true
   },
   "include": [
-    "src",
-    "vite-env.d.ts"
+    "**/*"
   ]
 }
