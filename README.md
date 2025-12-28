@@ -1,6 +1,77 @@
-# Fitopia - ZPD Backend Documentation (Supabase Optimized)
+# Fitopia - Zootopia Fitness App
 
-Fitopia is a gamified Zootopia-themed fitness PWA. This document provides the complete technical requirements for the backend implementation using **Supabase**.
+Fitopia is a gamified Zootopia-themed fitness PWA built with React, TypeScript, and Vite.
+
+## 🚀 Getting Started
+
+### Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd fitopia-app
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables** (optional)
+   Create a `.env` file in the root directory if needed:
+   ```env
+   VITE_BASE_PATH=/
+   ```
+   Note: AI features (food image analysis, plan briefing, character generation) are currently disabled. Integrate with ChatGPT API to enable these features.
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+   The app will be available at `http://localhost:3000`
+
+5. **Build for production**
+   ```bash
+   npm run build
+   ```
+
+### 📦 Deploying to GitHub Pages
+
+This repository is configured to automatically deploy to GitHub Pages using GitHub Actions.
+
+#### Setup Instructions:
+
+1. **Enable GitHub Pages**
+   - Go to your repository Settings → Pages
+   - Under "Source", select "GitHub Actions"
+   - Save the settings
+
+2. **Configure Base Path** (if needed)
+   - If deploying to a project page (e.g., `username.github.io/repository-name`), set `VITE_BASE_PATH` in the GitHub Actions workflow
+   - For root GitHub Pages (e.g., `username.github.io`), the default `/` works fine
+   - Edit `.github/workflows/deploy.yml` and add `VITE_BASE_PATH` to the build step if needed
+
+4. **Push to main/master branch**
+   - The workflow will automatically build and deploy on every push to `main` or `master`
+   - You can also manually trigger it from the Actions tab
+
+5. **Access your deployed app**
+   - After deployment, your app will be available at:
+     - Root GitHub Pages: `https://username.github.io`
+     - Project Pages: `https://username.github.io/repository-name`
+
+#### Manual Deployment
+
+You can also manually trigger the workflow:
+1. Go to the Actions tab in your repository
+2. Select "Build and Deploy to GitHub Pages"
+3. Click "Run workflow"
+
+---
+
+## 📚 Backend Documentation (Supabase Optimized)
+
+The following section provides the complete technical requirements for the backend implementation using **Supabase**.
 
 ---
 
@@ -8,7 +79,7 @@ Fitopia is a gamified Zootopia-themed fitness PWA. This document provides the co
 - **Database**: PostgreSQL (Supabase DB).
 - **Authentication**: Supabase Auth (JWT).
 - **Storage**: Supabase Storage Buckets.
-- **Edge Functions**: Deno (for Gemini AI proxying).
+- **Edge Functions**: Deno (for AI API proxying - ChatGPT integration recommended).
 
 ---
 
@@ -44,7 +115,7 @@ Fitopia is a gamified Zootopia-themed fitness PWA. This document provides the co
 
 ### 2. Evidence Locker (`/logs/food`)
 **GET** - Query by `log_date`.
-**POST** - Records food analyzed by Gemini.
+**POST** - Records food (optionally analyzed by AI - ChatGPT integration recommended).
 > **Relational Logic**: Every successful log should return the updated `current_xp` and `current_level` to the frontend for real-time progress feedback.
 
 ```json
@@ -138,11 +209,11 @@ Create two buckets in Supabase Storage with **Authenticated** read access:
 
 ---
 
-## ⚡ Edge Functions (Gemini Proxy)
-To protect the `API_KEY`, the following functions should be hosted on Supabase Edge:
-1. `analyze-meal`: Input image -> Call Gemini 3 Pro -> Return JSON + Save to DB.
-2. `generate-briefing`: Input Profile -> Call Gemini Flash -> Return text.
-3. `generate-avatar`: Input Prompt -> Call Gemini Image Pro -> Save to bucket -> Return URL.
+## ⚡ Edge Functions (AI API Proxy)
+To protect API keys, the following functions should be hosted on Supabase Edge (ChatGPT integration recommended):
+1. `analyze-meal`: Input image -> Call ChatGPT Vision API -> Return JSON + Save to DB.
+2. `generate-briefing`: Input Profile -> Call ChatGPT API -> Return text.
+3. `generate-avatar`: Input Prompt -> Call ChatGPT DALL-E API -> Save to bucket -> Return URL.
 
 ---
 

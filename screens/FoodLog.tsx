@@ -1,7 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Screen, Character, FoodLogItem } from '../types';
-import { analyzeFoodImage } from '../GeminiService';
 
 interface FoodLogProps {
   onNavigate: (screen: Screen) => void;
@@ -35,25 +34,13 @@ const FoodLog: React.FC<FoodLogProps> = ({ onNavigate, activeCharacter, onAddFoo
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-        setIsAnalyzing(true);
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64 = (reader.result as string).split(',')[1];
-            setUploadedImage(reader.result as string);
-            try {
-              const result = await analyzeFoodImage(base64, file.type, activeCharacter?.name || 'Judy Hopps');
-              setAnalyzedData({
-                ...result,
-                displayAmount: result.displayAmount || '1 Plate'
-              });
-            } catch (err) {
-              console.error(err);
-              alert("AI analysis failed. Try again!");
-            } finally {
-              setIsAnalyzing(false);
-            }
-        };
-        reader.readAsDataURL(file);
+        // Food image analysis feature is disabled
+        // To enable: Integrate with ChatGPT API for image analysis
+        alert("Food image analysis is currently disabled. Please use manual entry or integrate ChatGPT API for this feature.");
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
     }
   };
 
@@ -86,7 +73,7 @@ const FoodLog: React.FC<FoodLogProps> = ({ onNavigate, activeCharacter, onAddFoo
         <div className="size-10"></div>
         <h2 className="text-sm font-black text-light-text dark:text-white flex items-center gap-2 tracking-widest uppercase">
             <span className="material-symbols-outlined text-orange-500 text-xl font-bold">restaurant</span>
-            Gemini Analysis
+            Food Log
         </h2>
         <button 
           onClick={() => onNavigate(Screen.HOME)} 
@@ -142,7 +129,6 @@ const FoodLog: React.FC<FoodLogProps> = ({ onNavigate, activeCharacter, onAddFoo
                   </>
                 )}
             </button>
-            <p className="text-[9px] font-bold text-indigo-100 opacity-60 text-center uppercase tracking-widest">Powered by Gemini 3 Pro Vision</p>
         </div>
 
         <div className="animate-fade-in pb-10">

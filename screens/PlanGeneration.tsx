@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Screen, Character, FastingPlanConfig, UserStats } from '../types';
-import { generatePlanBriefing } from '../GeminiService';
 
 interface PlanGenerationProps {
   onNavigate: (screen: Screen) => void;
@@ -61,19 +60,10 @@ const PlanGeneration: React.FC<PlanGenerationProps> = ({
 
     setCalories(target);
 
-    // AI Briefing
-    const fetchBrief = async () => {
-      try {
-        const text = await generatePlanBriefing(userStats, userGoal, activeCharacter?.name || 'Judy Hopps');
-        setBriefing(text || activeCharacter?.onboardingMessages.plan || '');
-      } catch (e) {
-        console.error(e);
-        setBriefing(activeCharacter?.onboardingMessages.plan || '');
-      } finally {
-        setIsLoadingBrief(false);
-      }
-    };
-    fetchBrief();
+    // Use default character briefing message
+    // To enable AI briefing: Integrate with ChatGPT API
+    setBriefing(activeCharacter?.onboardingMessages.plan || 'Welcome to your personalized fitness plan!');
+    setIsLoadingBrief(false);
 
   }, [userStats, userGoal, setCalories, activeCharacter]);
 
@@ -108,14 +98,14 @@ const PlanGeneration: React.FC<PlanGenerationProps> = ({
       <main className="flex-1 flex flex-col px-6 gap-4 w-full overflow-y-auto no-scrollbar pt-2 pb-40">
         <div className="text-center">
            <div className="bg-slate-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] px-5 py-1.5 rounded-full inline-block mb-4">
-                {isLoadingBrief ? 'Calculating Intelligence...' : 'STRENGTH & POWER'}
+                STRENGTH & POWER
            </div>
            <h2 className="text-[32px] font-black leading-[0.95] text-gray-800 dark:text-white tracking-tight mb-6">
              Coach {activeCharacter?.name.split(' ')[0]} has your<br/><span className="text-gray-400 dark:text-gray-500">plan ready!</span>
            </h2>
            <div className="bg-[#FFFBEB] dark:bg-white/5 p-5 rounded-2xl w-full flex gap-4 border-l-4 border-l-yellow-400 relative overflow-hidden text-left shadow-sm min-h-[80px]">
               <div className="flex flex-col">
-                <span className="text-[8px] font-black uppercase text-yellow-600 mb-1">AI Briefing Generated</span>
+                <span className="text-[8px] font-black uppercase text-yellow-600 mb-1">Mission Briefing</span>
                 <p className="text-xs font-bold italic text-gray-600 dark:text-gray-300 leading-relaxed">
                   "{briefing}"
                 </p>
