@@ -373,14 +373,14 @@ const App: React.FC = () => {
         />
       )}
 
-      <main className={`flex-1 overflow-y-auto no-scrollbar relative z-10 ${shouldShowNav ? 'pb-32' : ''}`}>
+      <main className={`flex-1 overflow-y-auto no-scrollbar relative z-10 ${shouldShowNav ? 'pb-24' : ''}`}>
         {renderScreen()}
       </main>
 
       {isMenuOpen && (
         <div className="fixed inset-0 z-[100] pointer-events-auto">
            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-fade-in" onClick={() => setIsMenuOpen(false)}></div>
-           <div className="absolute bottom-28 left-0 right-0 px-8 flex flex-col gap-3 items-center animate-fade-in-up z-10 pointer-events-none pb-[env(safe-area-inset-bottom,20px)]">
+           <div className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 px-8 flex flex-col gap-3 items-center animate-fade-in-up z-10 pointer-events-none">
               <div className="w-full max-w-[280px] flex flex-col gap-3 pointer-events-auto">
                  <MenuOption label="Log Meal" icon="restaurant" color="bg-orange-500 text-white" onClick={() => handleNavigate(Screen.FOOD_LOG)} delay="0ms" />
                  <MenuOption label="Hydration" icon="water_drop" color="bg-blue-500 text-white" onClick={() => handleNavigate(Screen.WATER_LOG)} delay="50ms" />
@@ -392,16 +392,19 @@ const App: React.FC = () => {
       )}
 
       {shouldShowNav && (
-        <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto z-50 px-6 pb-6 pt-0 pointer-events-none mb-[env(safe-area-inset-bottom,0px)]">
-          <div className="bg-white/95 dark:bg-[#1C1C1E] backdrop-blur-2xl border border-white/20 dark:border-white/5 rounded-[2.5rem] h-20 flex justify-between items-center shadow-2xl shadow-black/10 pointer-events-auto px-4 relative">
+        <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto z-50 pointer-events-none">
+          <div className="bg-white/95 dark:bg-[#1C1C1E] backdrop-blur-2xl border-t border-black/5 dark:border-white/10 w-full h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] flex justify-between items-center shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pointer-events-auto px-8 pb-[env(safe-area-inset-bottom,0px)] rounded-t-[1.5rem] relative">
             <NavItem icon="home" label="Home" isActive={currentScreen === Screen.HOME} onClick={() => handleNavigate(Screen.HOME)} />
             <NavItem icon="bar_chart" label="Stats" isActive={currentScreen === Screen.ANALYTICS} onClick={() => handleNavigate(Screen.ANALYTICS)} />
+            
             <div className="w-16"></div> 
+
             <NavItem icon="emoji_events" label="Rewards" isActive={currentScreen === Screen.ACHIEVEMENTS} onClick={() => handleNavigate(Screen.ACHIEVEMENTS)} />
             <NavItem icon="settings" label="Settings" isActive={currentScreen === Screen.SETTINGS} onClick={() => handleNavigate(Screen.SETTINGS)} />
+            
             <button 
                 onClick={toggleMenu}
-                className={`absolute left-1/2 -translate-x-1/2 -top-8 size-16 bg-yellow-400 dark:bg-yellow-400 rounded-full shadow-[0_8px_30px_rgb(250,204,21,0.4)] flex items-center justify-center text-black transition-all duration-300 hover:scale-110 active:scale-95 border-4 border-white dark:border-[#1C1C1E] pointer-events-auto z-[60] ${isMenuOpen ? 'rotate-45 bg-red-500 dark:bg-red-500 shadow-[0_8px_30px_rgb(239,68,68,0.4)]' : ''}`}
+                className={`absolute left-1/2 -translate-x-1/2 -top-7 size-16 bg-yellow-400 dark:bg-yellow-400 rounded-full shadow-[0_8px_30px_rgb(250,204,21,0.4)] flex items-center justify-center text-black transition-all duration-300 hover:scale-110 active:scale-95 border-4 border-white dark:border-[#1C1C1E] pointer-events-auto z-[60] ${isMenuOpen ? 'rotate-45 bg-red-500 dark:bg-red-500 shadow-[0_8px_30px_rgb(239,68,68,0.4)]' : ''}`}
             >
                 <span className="material-symbols-outlined text-4xl font-black">add</span>
             </button>
