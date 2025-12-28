@@ -1,10 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { Screen } from '../types';
+import { Screen, ActivityLog } from '../types';
 
 interface ManualWorkoutEntryProps {
   onNavigate: (screen: Screen) => void;
-  onManualLog?: (data: { title: string; icon: string; duration: string; calories?: number }) => void;
+  onManualLog?: (data: { id?: string; title: string; icon: string; duration: string; calories?: number }) => void;
+  logs: ActivityLog[];
+  onDeleteWorkout: (id: string) => void;
 }
 
 const BOGO_QUOTES = [
@@ -16,12 +18,12 @@ const BOGO_QUOTES = [
     "The Tundratown precinct called. They said they're doing double your reps."
 ];
 
-const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onManualLog }) => {
+const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onManualLog, logs, onDeleteWorkout }) => {
   const [activity, setActivity] = useState('RUNNING');
   const [duration, setDuration] = useState('30');
   const [intensity, setIntensity] = useState(2);
   const [customSport, setCustomSport] = useState('');
-  const [savedSports, setSavedSports] = useState<{name: string, icon: string}[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const bogoQuote = useMemo(() => BOGO_QUOTES[Math.floor(Math.random() * BOGO_QUOTES.length)], []);
 
@@ -30,7 +32,8 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onM
     { name: 'GYM', icon: '🏋️' },
     { name: 'SWIMMING', icon: '🏊' },
     { name: 'BOXING', icon: '🥊' },
-    ...savedSports
+    { name: 'CYCLING', icon: '🚲' },
+    { name: 'YOGA', icon: '🧘' }
   ].slice(0, 6);
 
   const handleLogActivity = () => {
@@ -39,8 +42,21 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onM
       const baseCalories = parseInt(duration) * (intensity === 1 ? 5 : intensity === 2 ? 8 : 12);
       
       if (onManualLog) {
-          onManualLog({ title: name, icon: '🏃', duration: dur, calories: baseCalories });
+          onManualLog({ id: editingId || undefined, title: name, icon: '🏃', duration: dur, calories: baseCalories });
       }
+      
+      // Reset
+      setEditingId(null);
+      setCustomSport('');
+      setDuration('30');
+  };
+
+  const handleEdit = (log: ActivityLog) => {
+      setEditingId(log.id);
+      setCustomSport(log.title);
+      const mins = log.duration.split(':')[0];
+      setDuration(mins);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const selectPreset = (preset: {name: string, icon: string}) => {
@@ -84,8 +100,8 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onM
       <div className="flex-1 flex flex-col pt-4 pb-32 gap-6 relative z-10 overflow-y-auto no-scrollbar w-full px-6">
         
         {/* Manual Input Area */}
-        <div className="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md p-5 rounded-[2.5rem] border border-blue-100 dark:border-white/5 shadow-sm space-y-4">
-            <label className="text-[10px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest ml-2">Record Completed Drill</label>
+        <div className={`p-5 rounded-[2.5rem] border shadow-sm space-y-4 transition-colors ${editingId ? 'bg-blue-100/40 border-blue-400' : 'bg-white/80 dark:bg-dark-surface/80 border-teal-100 dark:border-white/5'}`}>
+            <label className={`text-[10px] font-black uppercase tracking-widest ml-2 ${editingId ? 'text-blue-600' : 'text-blue-500 dark:text-blue-400'}`}>{editingId ? 'Updating Case File' : 'Record Completed Drill'}</label>
             <div className="flex flex-col gap-3">
                 <input 
                     type="text" 
@@ -126,9 +142,18 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onM
             <div className="space-y-4">
                 <div className="flex justify-between items-baseline">
                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Drill Duration</label>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-slate-800 dark:text-white tracking-tighter">{duration}</span>
-                        <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase">Min</span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex items-center h-12 bg-white dark:bg-black/20 rounded-xl border border-blue-100 dark:border-white/10 px-3 shadow-inner">
+                            <input 
+                                type="number" 
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                className="w-16 bg-transparent text-center text-xl font-black text-slate-800 dark:text-white outline-none"
+                                min="1"
+                                max="999"
+                            />
+                            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">MIN</span>
+                        </div>
                     </div>
                 </div>
                 <input 
@@ -162,6 +187,40 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onM
                 </div>
             </div>
         </section>
+
+        {/* History Section */}
+        <section className="animate-fade-in mt-2 pb-10">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-gray-500 mb-4 px-2">Today's Training Drills</h3>
+            <div className="flex flex-col gap-3">
+                {logs.length === 0 ? (
+                    <div className="text-center py-10 opacity-30 italic text-sm text-slate-400">Drill records pending...</div>
+                ) : (
+                    logs.map(log => (
+                        <div key={log.id} className={`flex items-center gap-4 p-4 rounded-3xl border transition-all ${editingId === log.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 shadow-md ring-2 ring-blue-100 dark:ring-blue-900/40' : 'bg-white dark:bg-[#1C1C1E] border-slate-100 dark:border-white/5 shadow-sm group'}`}>
+                            <div className="size-14 rounded-2xl bg-slate-50 dark:bg-black/20 flex items-center justify-center text-3xl shadow-inner shrink-0 group-hover:scale-105 transition-transform">{log.icon}</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <p className="font-black truncate text-gray-900 dark:text-white text-sm uppercase tracking-tight">{log.title}</p>
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 dark:text-gray-500">{log.timestamp} • {log.duration}</p>
+                            </div>
+                            <div className="text-right pr-2">
+                                <span className="text-xl font-black text-blue-500 dark:text-blue-400 leading-none">{log.calories || 0}</span>
+                                <span className="text-[8px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest block -mt-1">KCAL</span>
+                            </div>
+                            <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleEdit(log)} className="size-8 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 flex items-center justify-center hover:scale-110 active:scale-90 transition-transform">
+                                    <span className="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <button onClick={() => onDeleteWorkout(log.id)} className="size-8 rounded-full bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 flex items-center justify-center hover:scale-110 active:scale-90 transition-transform">
+                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </section>
       </div>
 
       {/* Primary Log Button */}
@@ -169,11 +228,11 @@ const ManualWorkoutEntry: React.FC<ManualWorkoutEntryProps> = ({ onNavigate, onM
         <button 
             onClick={handleLogActivity}
             disabled={!customSport && !activity}
-            className="w-full h-20 rounded-[2.5rem] bg-[#2563EB] text-white shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all flex flex-col items-center justify-center group disabled:opacity-50"
+            className={`w-full h-20 rounded-[2.5rem] text-white shadow-2xl active:scale-[0.98] transition-all flex flex-col items-center justify-center group disabled:opacity-50 ${editingId ? 'bg-blue-600 shadow-blue-700/40' : 'bg-[#2563EB] shadow-blue-500/30'}`}
         >
             <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-2xl filled">add_task</span>
-                <span className="text-xl font-black uppercase tracking-[0.15em]">Log Drill Entry</span>
+                <span className="material-symbols-outlined text-2xl filled">{editingId ? 'verified' : 'add_task'}</span>
+                <span className="text-xl font-black uppercase tracking-[0.15em]">{editingId ? 'Update Drill File' : 'Log Drill Entry'}</span>
             </div>
             <span className="text-[8px] font-black opacity-60 uppercase tracking-[0.3em] mt-1">Authorized by ZPD Precinct 1</span>
         </button>

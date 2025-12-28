@@ -1,10 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { Screen } from '../types';
+import { Screen, ActivityLog } from '../types';
 
 interface ManualMeditationEntryProps {
   onNavigate: (screen: Screen) => void;
-  onManualLog?: (data: { title: string; icon: string; duration: string }) => void;
+  onManualLog?: (data: { id?: string; title: string; icon: string; duration: string }) => void;
+  logs: ActivityLog[];
+  onDeleteMeditation: (id: string) => void;
 }
 
 const YAX_QUOTES = [
@@ -16,12 +18,12 @@ const YAX_QUOTES = [
     "Is your inner sloth calling? Time for some slow... deep... breaths."
 ];
 
-const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigate, onManualLog }) => {
+const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigate, onManualLog, logs, onDeleteMeditation }) => {
   const [activity, setActivity] = useState('MINDFULNESS');
   const [duration, setDuration] = useState('15');
   const [zenLevel, setZenLevel] = useState(50);
   const [customFlow, setCustomFlow] = useState('');
-  const [savedFlows, setSavedFlows] = useState<{name: string, icon: string}[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   const quote = useMemo(() => YAX_QUOTES[Math.floor(Math.random() * YAX_QUOTES.length)], []);
 
@@ -30,7 +32,8 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
     { name: 'YOGA', icon: '🤸' },
     { name: 'DEEP BREATH', icon: '🌬️' },
     { name: 'NATURE WALK', icon: '🍃' },
-    ...savedFlows
+    { name: 'SOUND BATH', icon: '🔔' },
+    { name: 'OASIS NAP', icon: '💤' }
   ].slice(0, 6);
 
   const handleLogFlow = () => {
@@ -38,8 +41,21 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
       const dur = `${duration}:00`;
       
       if (onManualLog) {
-          onManualLog({ title: name, icon: '🌸', duration: dur });
+          onManualLog({ id: editingId || undefined, title: name, icon: '🌸', duration: dur });
       }
+      
+      // Reset
+      setEditingId(null);
+      setCustomFlow('');
+      setDuration('15');
+  };
+
+  const handleEdit = (log: ActivityLog) => {
+      setEditingId(log.id);
+      setCustomFlow(log.title);
+      const mins = log.duration.split(':')[0];
+      setDuration(mins);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const selectPreset = (preset: {name: string, icon: string}) => {
@@ -65,7 +81,7 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
             </div>
             <button 
               onClick={() => onNavigate(Screen.HOME)}
-              className="size-10 rounded-full bg-white/80 dark:bg-white/10 shadow-sm flex items-center justify-center text-teal-900 dark:text-white"
+              className="size-10 rounded-full bg-white/80 dark:bg-white/10 shadow-sm flex items-center justify-center text-teal-900 text-white"
             >
               <span className="material-symbols-outlined text-2xl">close</span>
             </button>
@@ -84,8 +100,8 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
       <div className="flex-1 flex flex-col pt-4 pb-32 gap-6 relative z-10 overflow-y-auto no-scrollbar w-full px-6">
         
         {/* Manual Oasis Entry */}
-        <div className="bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md p-5 rounded-[2.5rem] border border-teal-100 dark:border-white/5 shadow-sm space-y-4">
-            <label className="text-[10px] font-black text-teal-500 dark:text-teal-400 uppercase tracking-widest ml-2">Record Completed Flow</label>
+        <div className={`p-5 rounded-[2.5rem] border shadow-sm space-y-4 transition-colors ${editingId ? 'bg-teal-100/40 border-teal-400' : 'bg-white/80 dark:bg-dark-surface/80 border-teal-100 dark:border-white/5'}`}>
+            <label className={`text-[10px] font-black uppercase tracking-widest ml-2 ${editingId ? 'text-teal-700' : 'text-teal-500 dark:text-teal-400'}`}>{editingId ? 'Refining Flow Record' : 'Record Completed Flow'}</label>
             <div className="flex flex-col gap-3">
                 <input 
                     type="text" 
@@ -126,9 +142,18 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
             <div className="space-y-4">
                 <div className="flex justify-between items-baseline">
                     <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Flow Duration</label>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-teal-800 dark:text-white tracking-tighter">{duration}</span>
-                        <span className="text-xs font-black text-teal-400 dark:text-slate-500 uppercase">Min</span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex items-center h-12 bg-white dark:bg-black/20 rounded-xl border border-teal-100 dark:border-white/10 px-3 shadow-inner">
+                            <input 
+                                type="number" 
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                className="w-14 bg-transparent text-center text-xl font-black text-teal-800 dark:text-white outline-none"
+                                min="1"
+                                max="999"
+                            />
+                            <span className="text-[8px] font-black text-teal-400 dark:text-teal-500 uppercase tracking-widest ml-1">MIN</span>
+                        </div>
                     </div>
                 </div>
                 <input 
@@ -151,17 +176,47 @@ const ManualMeditationEntry: React.FC<ManualMeditationEntryProps> = ({ onNavigat
                 </div>
             </div>
         </section>
+
+        {/* Today's History Section */}
+        <section className="animate-fade-in mt-2 pb-10">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-gray-500 mb-4 px-2">Today's Zen Records</h3>
+            <div className="flex flex-col gap-3">
+                {logs.length === 0 ? (
+                    <div className="text-center py-10 opacity-30 italic text-sm text-slate-400">Tranquility pending...</div>
+                ) : (
+                    logs.map(log => (
+                        <div key={log.id} className={`flex items-center gap-4 p-4 rounded-3xl border transition-all ${editingId === log.id ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-400 shadow-md ring-2 ring-teal-100 dark:ring-teal-900/40' : 'bg-white dark:bg-[#1C1C1E] border-slate-100 dark:border-white/5 shadow-sm group'}`}>
+                            <div className="size-14 rounded-2xl bg-teal-50 dark:bg-black/20 flex items-center justify-center text-3xl shadow-inner shrink-0 group-hover:scale-105 transition-transform">{log.icon}</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <p className="font-black truncate text-gray-900 dark:text-white text-sm uppercase tracking-tight">{log.title}</p>
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 dark:text-gray-500">{log.timestamp} • {log.duration}</p>
+                            </div>
+                            <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleEdit(log)} className="size-8 rounded-full bg-teal-50 dark:bg-teal-900/40 text-teal-600 dark:text-teal-300 flex items-center justify-center hover:scale-110 active:scale-90 transition-transform">
+                                    <span className="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <button onClick={() => onDeleteMeditation(log.id)} className="size-8 rounded-full bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 flex items-center justify-center hover:scale-110 active:scale-90 transition-transform">
+                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </section>
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 p-6 z-30 bg-gradient-to-t from-[#F0FDFA] via-[#F0FDFA] to-transparent dark:from-dark-bg dark:via-dark-bg pt-10">
         <button 
             onClick={handleLogFlow}
             disabled={!customFlow && !activity}
-            className="w-full h-20 rounded-[2.5rem] bg-teal-500 text-white shadow-2xl shadow-teal-600/40 active:scale-[0.98] transition-all flex flex-col items-center justify-center group disabled:opacity-50"
+            className={`w-full h-20 rounded-[2.5rem] text-white shadow-2xl active:scale-[0.98] transition-all flex flex-col items-center justify-center group disabled:opacity-50 ${editingId ? 'bg-teal-600 shadow-teal-700/40' : 'bg-teal-500 shadow-teal-600/40'}`}
         >
             <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-3xl filled group-hover:scale-110 transition-transform">spa</span>
-                <span className="text-xl font-black uppercase tracking-[0.15em]">Log Zen Record</span>
+                <span className="material-symbols-outlined text-3xl filled group-hover:scale-110 transition-transform">{editingId ? 'verified' : 'spa'}</span>
+                <span className="text-xl font-black uppercase tracking-[0.15em]">{editingId ? 'Update Zen Flow' : 'Log Zen Record'}</span>
             </div>
             <span className="text-[8px] font-black opacity-60 uppercase tracking-[0.3em] mt-1 text-center">Initiating Tranquility Protocol</span>
         </button>

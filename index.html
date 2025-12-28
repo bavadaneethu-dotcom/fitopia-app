@@ -1,9 +1,16 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Fitopia</title>
+    <meta name="theme-color" content="#FACC15" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Fitopia" />
+    <link rel="apple-touch-icon" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,23 +25,21 @@
               sans: ['Spline Sans', 'sans-serif'],
             },
             colors: {
-              // Light Mode: Yellow & White theme (Zootopia Warm)
               light: {
                 bg: '#FFFFFF',
-                surface: '#FFFBEB', // yellow-50
-                primary: '#FACC15', // yellow-400
-                secondary: '#FEF08A', // yellow-200
-                text: '#422006', // yellow-950/brownish
-                muted: '#854D0E', // yellow-800
+                surface: '#FFFBEB',
+                primary: '#FACC15',
+                secondary: '#FEF08A',
+                text: '#422006',
+                muted: '#854D0E',
               },
-              // Dark Mode: iPhone Standard (Black & System Yellow)
               dark: {
-                bg: '#000000', // Pure Black
-                surface: '#1C1C1E', // System Gray 6 (Dark)
-                primary: '#FFD60A', // iOS System Yellow
-                secondary: '#2C2C2E', // System Gray 5 (Dark)
-                text: '#FFFFFF', // White
-                muted: '#8E8E93', // System Gray
+                bg: '#000000',
+                surface: '#1C1C1E',
+                primary: '#FFD60A',
+                secondary: '#2C2C2E',
+                text: '#FFFFFF',
+                muted: '#8E8E93',
               }
             },
             animation: {
@@ -63,20 +68,17 @@
       }
     </script>
     <style>
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
           display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
       }
       body {
         -webkit-tap-highlight-color: transparent;
+        overscroll-behavior-y: contain;
       }
-      
-      /* Animation Delays */
       .delay-100 { animation-delay: 100ms; }
       .delay-200 { animation-delay: 200ms; }
       .delay-300 { animation-delay: 300ms; }

@@ -261,7 +261,7 @@ const App: React.FC = () => {
   const handleSessionComplete = (type: 'workout' | 'meditation', data: any) => {
     const today = new Date();
     const newLog: ActivityLog = {
-      id: Date.now().toString(),
+      id: data.id || Date.now().toString(),
       title: data.title,
       icon: data.icon,
       duration: data.duration, 
@@ -271,12 +271,20 @@ const App: React.FC = () => {
       color: data.color
     };
     if (type === 'workout') {
-      setWorkoutLogs(prev => [newLog, ...prev]);
+      if (data.id) {
+          setWorkoutLogs(prev => prev.map(x => x.id === data.id ? newLog : x));
+      } else {
+          setWorkoutLogs(prev => [newLog, ...prev]);
+      }
     } else {
-      setMeditationLogs(prev => [newLog, ...prev]);
+      if (data.id) {
+          setMeditationLogs(prev => prev.map(x => x.id === data.id ? newLog : x));
+      } else {
+          setMeditationLogs(prev => [newLog, ...prev]);
+      }
     }
     setSelectedDate(today);
-    setCurrentScreen(Screen.HOME);
+    // REMOVED automatic navigation to HOME to allow user to see the updated log on the same page
   };
 
   const handleAddFood = (item: FoodLogItem) => {
@@ -336,8 +344,8 @@ const App: React.FC = () => {
       case Screen.SETTINGS: return <Settings isDarkMode={isDarkMode} toggleTheme={toggleTheme} activeCharacter={activeCharacter} onNavigate={handleNavigate} unitSystem={unitSystem} />;
       case Screen.PROFILE: return <Profile onNavigate={handleNavigate} userStats={userStats} activeCharacter={activeCharacter} unitSystem={unitSystem} workoutLogs={workoutLogs} meditationLogs={meditationLogs} />;
       case Screen.BIOMETRICS: return <Biometrics onNavigate={handleNavigate} unitSystem={unitSystem} />;
-      case Screen.MANUAL_WORKOUT: return <ManualWorkoutEntry onNavigate={handleNavigate} onManualLog={(data) => handleSessionComplete('workout', data)} />;
-      case Screen.MANUAL_MEDITATION: return <ManualMeditationEntry onNavigate={handleNavigate} onManualLog={(data) => handleSessionComplete('meditation', data)} />;
+      case Screen.MANUAL_WORKOUT: return <ManualWorkoutEntry onNavigate={handleNavigate} logs={filteredWorkoutLogs} onDeleteWorkout={(id) => setWorkoutLogs(w => w.filter(x => x.id !== id))} onManualLog={(data) => handleSessionComplete('workout', data)} />;
+      case Screen.MANUAL_MEDITATION: return <ManualMeditationEntry onNavigate={handleNavigate} logs={filteredMeditationLogs} onDeleteMeditation={(id) => setMeditationLogs(m => m.filter(x => x.id !== id))} onManualLog={(data) => handleSessionComplete('meditation', data)} />;
       case Screen.CLAIM_REWARD: return <ClaimReward activeCharacter={activeCharacter} setActiveCharacter={setActiveCharacter} onNavigate={handleNavigate} onUnlock={handleUnlock} />;
       case Screen.WARDROBE: return <Wardrobe activeCharacter={activeCharacter} setActiveCharacter={setActiveCharacter} inventory={inventory} onNavigate={handleNavigate} />;
       case Screen.SETTINGS_UNITS: return <SettingsUnits onNavigate={handleNavigate} currentSystem={unitSystem} onApply={handleUpdateUnitSystem} />;
