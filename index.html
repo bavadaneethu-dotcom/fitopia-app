@@ -1,92 +1,110 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Fitopia</title>
-    <meta name="theme-color" content="#FACC15" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Fitopia" />
-    <link rel="apple-touch-icon" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
-    <link rel="manifest" href="manifest.json" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Spline Sans', 'sans-serif'],
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Fitopia</title>
+  <meta name="theme-color" content="#FACC15" />
+  <link rel="apple-touch-icon" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Spline Sans', 'sans-serif'],
+          },
+          colors: {
+            light: {
+              bg: '#FFFFFF',
+              surface: '#FFFBEB',
+              primary: '#FACC15',
+              secondary: '#FEF08A',
+              text: '#422006',
+              muted: '#854D0E',
             },
-            colors: {
-              light: {
-                bg: '#FFFFFF',
-                surface: '#FFFBEB',
-                primary: '#FACC15',
-                secondary: '#FEF08A',
-                text: '#422006',
-                muted: '#854D0E',
-              },
-              dark: {
-                bg: '#000000',
-                surface: '#1C1C1E',
-                primary: '#FFD60A',
-                secondary: '#2C2C2E',
-                text: '#FFFFFF',
-                muted: '#8E8E93',
-              }
+            dark: {
+              bg: '#000000',
+              surface: '#1C1C1E',
+              primary: '#FFD60A',
+              secondary: '#2C2C2E',
+              text: '#FFFFFF',
+              muted: '#8E8E93',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'zoom-pan': 'zoom-pan 20s ease-in-out infinite',
+            'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' },
             },
-            animation: {
-              'float': 'float 6s ease-in-out infinite',
-              'zoom-pan': 'zoom-pan 20s ease-in-out infinite',
-              'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'zoom-pan': {
+              '0%': { transform: 'scale(1.1) translateX(0)' },
+              '50%': { transform: 'scale(1.2) translateX(-2%)' },
+              '100%': { transform: 'scale(1.1) translateX(0)' },
             },
-            keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0px)' },
-                '50%': { transform: 'translateY(-10px)' },
-              },
-              'zoom-pan': {
-                '0%': { transform: 'scale(1.1) translateX(0)' },
-                '50%': { transform: 'scale(1.2) translateX(-2%)' },
-                '100%': { transform: 'scale(1.1) translateX(0)' },
-              },
-              'fade-in-up': {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              }
+            'fade-in-up': {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
             }
           }
         }
       }
-    </script>
-    <style>
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
-      }
-      .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-      }
-      body {
-        -webkit-tap-highlight-color: transparent;
-        overscroll-behavior-y: contain;
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-      }
-      .delay-100 { animation-delay: 100ms; }
-      .delay-200 { animation-delay: 200ms; }
-      .delay-300 { animation-delay: 300ms; }
-      .delay-400 { animation-delay: 400ms; }
-      .delay-500 { animation-delay: 500ms; }
-      .delay-700 { animation-delay: 700ms; }
-    </style>
+    }
+  </script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    body {
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: contain;
+    }
+
+    .delay-100 {
+      animation-delay: 100ms;
+    }
+
+    .delay-200 {
+      animation-delay: 200ms;
+    }
+
+    .delay-300 {
+      animation-delay: 300ms;
+    }
+
+    .delay-400 {
+      animation-delay: 400ms;
+    }
+
+    .delay-500 {
+      animation-delay: 500ms;
+    }
+
+    .delay-700 {
+      animation-delay: 700ms;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -97,7 +115,9 @@
 }
 </script>
 </head>
-  <body class="bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text transition-colors duration-300">
-    <div id="root"></div>
-  </body>
+
+<body class="bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text transition-colors duration-300">
+  <div id="root"></div>
+</body>
+
 </html>
