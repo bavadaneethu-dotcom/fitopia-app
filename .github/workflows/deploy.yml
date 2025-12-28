@@ -36,9 +36,9 @@ jobs:
 
       - name: Build
         env:
-          # For project pages (username.github.io/repo-name), set this in repository variables
-          # For root pages (username.github.io), leave empty or use '/'
-          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/' }}
+          # For project pages (username.github.io/repo-name), use '/repository-name/'
+          # For root pages (username.github.io), use '/'
+          VITE_BASE_PATH: '/fitopia-app/'
         run: npm run build
 
       - name: Setup Pages
