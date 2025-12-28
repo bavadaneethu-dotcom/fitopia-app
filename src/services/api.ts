@@ -80,10 +80,74 @@ export const api = {
             const { data, error } = await supabase
                 .from('profiles')
                 .update(updates)
-                .eq('id', userId);
+                .eq('id', userId)
+                .select()
+                .single();
 
             if (error) throw error;
             return data;
+        }
+    },
+
+    logs: {
+        // Fetch all logs for a given date (or all if no date provided)
+        getByDate: async (userId: string, date: string) => {
+            const [activity, food, water, fasting, weight] = await Promise.all([
+                supabase.from('activity_logs').select('*').eq('user_id', userId).eq('date', date),
+                supabase.from('food_logs').select('*').eq('user_id', userId).eq('date', date),
+                supabase.from('water_logs').select('*').eq('user_id', userId).eq('date', date),
+                supabase.from('fasting_logs').select('*').eq('user_id', userId).eq('date', date),
+                supabase.from('weight_logs').select('*').eq('user_id', userId).eq('date', date)
+            ]);
+
+            if (activity.error) throw activity.error;
+            if (food.error) throw food.error;
+            if (water.error) throw water.error;
+            if (fasting.error) throw fasting.error;
+            if (weight.error) throw weight.error;
+
+            return {
+                activity: activity.data || [],
+                food: food.data || [],
+                water: water.data || [],
+                fasting: fasting.data || [],
+                weight: weight.data || []
+            };
+        },
+
+        // Generic Add
+        add: async (table: 'activity_logs' | 'food_logs' | 'water_logs' | 'fasting_logs' | 'weight_logs', data: any) => {
+            const { data: result, error } = await supabase
+                .from(table)
+                .insert(data)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return result;
+        },
+
+        // Generic Update
+        update: async (table: 'activity_logs' | 'food_logs' | 'water_logs' | 'fasting_logs' | 'weight_logs', id: string, updates: any) => {
+            const { data, error } = await supabase
+                .from(table)
+                .update(updates)
+                .eq('id', id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+
+        // Generic Delete
+        delete: async (table: 'activity_logs' | 'food_logs' | 'water_logs' | 'fasting_logs' | 'weight_logs', id: string) => {
+            const { error } = await supabase
+                .from(table)
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
         }
     }
 };

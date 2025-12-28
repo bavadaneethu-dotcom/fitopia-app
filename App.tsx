@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { api } from './src/services/api';
 import { Screen, Character, ActivityLog, FoodLogItem, WaterLogItem, UserStats, FastingPlanConfig, FastingLog, WeightLog } from './types';
 import Home from './screens/Home';
 import Analytics from './screens/Analytics';
@@ -207,6 +208,50 @@ const App: React.FC = () => {
   // Inventory State
   const [inventory, setInventory] = useState<string[]>(['none']);
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Initial Data Loading & Auth Check
+  useEffect(() => {
+    const loadData = async () => {
+      const user = await api.auth.getUser();
+      setCurrentUser(user);
+
+      if (user) {
+        // Fetch Profile
+        try {
+          const profile = await api.profiles.get(user.id);
+          if (profile) {
+            if (profile.name) setUserStats(prev => ({ ...prev, name: profile.name }));
+            if (profile.stats) setUserStats(prev => ({ ...prev, ...profile.stats }));
+            if (profile.character?.active) {
+              const char = CHARACTERS.find(c => c.id === profile.character.active);
+              if (char) setActiveCharacter(char);
+            }
+            if (profile.inventory) setInventory(profile.inventory);
+            // Fasting State from Profile (if stored there) or default
+          }
+
+          // Fetch Logs for selected Date
+          const dateKey = formatDateKey(selectedDate);
+          const logs = await api.logs.getByDate(user.id, dateKey);
+
+          setWorkoutLogs(logs.activity.filter((l: any) => l.type === 'workout'));
+          setMeditationLogs(logs.activity.filter((l: any) => l.type === 'meditation'));
+          setFoodLogs(logs.food);
+          setWaterLogs(logs.water);
+          setFastingLogs(logs.fasting);
+          setWeightLogs(logs.weight);
+
+        } catch (e) {
+          console.error("Error loading data", e);
+        }
+      } else {
+        setCurrentScreen(Screen.WELCOME);
+      }
+    };
+    loadData();
+  }, [selectedDate]); // Re-fetch when date changes
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -218,7 +263,7 @@ const App: React.FC = () => {
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  const handleUpdateUnitSystem = (newSystem: 'metric' | 'imperial') => {
+  const handleUpdateUnitSystem = async (newSystem: 'metric' | 'imperial') => {
     if (newSystem !== unitSystem) {
       const newStats = { ...userStats };
       const weightVal = parseFloat(userStats.weight);
@@ -231,6 +276,15 @@ const App: React.FC = () => {
       }
       setUserStats(newStats);
       setUnitSystem(newSystem);
+
+      if (currentUser) {
+        // Persist unit system preference in Profile stats
+        try {
+          await api.profiles.update(currentUser.id, { stats: { ...newStats, unitSystem: newSystem } });
+        } catch (e) {
+          console.error("Failed to update unit system", e);
+        }
+      }
     }
   };
 
@@ -253,75 +307,125 @@ const App: React.FC = () => {
     setIsOverlayOpen(false);
   };
 
-  const handleUnlock = (itemId: string) => {
+  const handleUnlock = async (itemId: string) => {
     if (!inventory.includes(itemId)) {
-      setInventory(prev => [...prev, itemId]);
+      const newInventory = [...inventory, itemId];
+      setInventory(newInventory);
+      if (currentUser) {
+        try {
+          await api.profiles.update(currentUser.id, { inventory: newInventory });
+        } catch (e) {
+          console.error("Failed to update inventory", e);
+        }
+      }
     }
   };
 
-  const handleSessionComplete = (type: 'workout' | 'meditation', data: any) => {
+  const handleSessionComplete = async (type: 'workout' | 'meditation', data: any) => {
+    if (!currentUser) return;
     const today = new Date();
-    const newLog: ActivityLog = {
-      id: data.id || Date.now().toString(),
+    const dateKey = formatDateKey(today);
+
+    const newLog = {
+      user_id: currentUser.id,
+      type: type,
       title: data.title,
       icon: data.icon,
       duration: data.duration,
-      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: formatDateKey(today),
       calories: data.calories,
-      color: data.color
+      color: data.color,
+      date: dateKey,
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    if (type === 'workout') {
-      if (data.id) {
-        setWorkoutLogs(prev => prev.map(x => x.id === data.id ? newLog : x));
+
+    try {
+      const savedLog = await api.logs.add('activity_logs', newLog);
+      // Optimistic update or re-fetch (using simple state update here)
+      const formattedLog: ActivityLog = { ...newLog, id: savedLog.id };
+
+      if (type === 'workout') {
+        setWorkoutLogs(prev => [formattedLog, ...prev]);
       } else {
-        setWorkoutLogs(prev => [newLog, ...prev]);
+        setMeditationLogs(prev => [formattedLog, ...prev]);
       }
-    } else {
-      if (data.id) {
-        setMeditationLogs(prev => prev.map(x => x.id === data.id ? newLog : x));
-      } else {
-        setMeditationLogs(prev => [newLog, ...prev]);
-      }
+      setSelectedDate(today);
+    } catch (e) {
+      console.error("Failed to save session", e);
     }
-    setSelectedDate(today);
   };
 
-  const handleAddFood = (item: FoodLogItem) => {
+  const handleAddFood = async (item: FoodLogItem) => {
+    if (!currentUser) return;
     const today = new Date();
-    const newItem = { ...item, date: formatDateKey(today) };
-    setFoodLogs(prev => [newItem, ...prev]);
-    setSelectedDate(today);
-  };
+    const dateKey = formatDateKey(today);
 
-  const handleAddWater = (amount: number) => {
-    const today = new Date();
-    const newItem: WaterLogItem = {
-      id: Date.now().toString(),
-      amount,
-      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      date: formatDateKey(today)
+    const newItem = {
+      user_id: currentUser.id,
+      name: item.name,
+      calories: item.calories,
+      macros: item.macros,
+      icon: item.icon,
+      display_amount: item.displayAmount, // Ensure casing matches DB
+      date: dateKey,
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    setWaterLogs(prev => [newItem, ...prev]);
-    setSelectedDate(today);
+
+    try {
+      const savedItem = await api.logs.add('food_logs', newItem);
+      setFoodLogs(prev => [{ ...item, id: savedItem.id, date: dateKey }, ...prev]);
+      setSelectedDate(today);
+    } catch (e) {
+      console.error("Failed to add food", e);
+    }
   };
 
-  const handleFastingStateChange = (fasting: boolean) => {
+  const handleAddWater = async (amount: number) => {
+    if (!currentUser) return;
+    const today = new Date();
+    const dateKey = formatDateKey(today);
+
+    const newItem = {
+      user_id: currentUser.id,
+      amount: amount,
+      date: dateKey,
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    try {
+      const savedItem = await api.logs.add('water_logs', newItem);
+      setWaterLogs(prev => [{ ...savedItem } as WaterLogItem, ...prev]);
+      setSelectedDate(today);
+    } catch (e) {
+      console.error("Failed to add water", e);
+    }
+  };
+
+  const handleFastingStateChange = async (fasting: boolean) => {
+    if (!currentUser) return;
     if (!fasting && isFasting && fastStartTime) {
       const now = new Date();
       const diff = now.getTime() - fastStartTime.getTime();
       const hours = Math.floor(diff / 3600000);
       const mins = Math.floor((diff % 3600000) / 60000);
-      const newLog: FastingLog = {
-        id: Date.now().toString(),
+      const dateKey = formatDateKey(now);
+
+      const newLog = {
+        user_id: currentUser.id,
         duration: `${hours}h ${mins}m`,
-        startTime: fastStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        endTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: formatDateKey(now)
+        start_time: fastStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        end_time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: dateKey
       };
-      setFastingLogs(prev => [newLog, ...prev]);
+
+      try {
+        const savedLog = await api.logs.add('fasting_logs', newLog);
+        setFastingLogs(prev => [{ ...savedLog, startTime: newLog.start_time, endTime: newLog.end_time } as FastingLog, ...prev]);
+      } catch (e) {
+        console.error("Failed to save fasting log", e);
+      }
     }
     setIsFasting(fasting);
+    // Persist fasting state to profile if needed, or local storage. For now, just state.
   };
 
   const renderScreen = () => {
