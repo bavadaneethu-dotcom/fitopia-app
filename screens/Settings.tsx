@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Character, Screen } from '../types';
 
 interface SettingsProps {
@@ -12,6 +12,54 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ isDarkMode, toggleTheme, activeCharacter, onNavigate, unitSystem }) => {
   const [soundEffects, setSoundEffects] = useState(true);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(iOS);
+    
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone === true;
+    
+    if (isStandalone) {
+      setCanInstall(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    if (iOS) {
+      setCanInstall(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (isIOS) {
+      alert('To install:\n1. Tap the Share button\n2. Select "Add to Home Screen"\n3. Tap "Add"');
+      return;
+    }
+
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setCanInstall(false);
+      }
+      setDeferredPrompt(null);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 px-6 pt-6 pb-10 animate-fade-in relative">
@@ -78,6 +126,15 @@ const Settings: React.FC<SettingsProps> = ({ isDarkMode, toggleTheme, activeChar
             value="Configure"
             onClick={() => onNavigate(Screen.SETTINGS_NOTIFICATIONS)}
           />
+          {canInstall && (
+            <SettingsItem 
+              icon="download" 
+              label="Install App" 
+              value={isIOS ? "iOS Instructions" : "Install Now"}
+              onClick={handleInstall}
+              iconColor="text-yellow-500"
+            />
+          )}
         </div>
       </div>
 
