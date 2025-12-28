@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Screen } from '../types';
 import { supabase } from '../supabase';
+import { api } from '../src/services/api';
 
 interface LoginProps {
   onNavigate: (screen: Screen) => void;
@@ -47,13 +48,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     setErrors(prev => ({ ...prev, submit: '' }));
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) throw error;
-
+      await api.auth.signIn(formData.email, formData.password);
       onNavigate(Screen.HOME);
     } catch (err: any) {
       console.error('Login error:', err);
@@ -107,8 +102,8 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
             <div className={`relative group transition-all duration-300 ${errors.email ? 'animate-shake' : ''}`}>
               <input
                 className={`block w-full rounded-2xl border-2 bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 text-light-text dark:text-dark-text shadow-sm placeholder:text-gray-400 focus:outline-none transition-all duration-200 sm:text-sm sm:leading-6 ${errors.email
-                    ? 'border-red-300 focus:border-red-500 bg-red-50/50'
-                    : 'border-transparent focus:border-light-primary dark:focus:border-dark-primary ring-1 ring-inset ring-black/5 dark:ring-white/10 focus:ring-2'
+                  ? 'border-red-300 focus:border-red-500 bg-red-50/50'
+                  : 'border-transparent focus:border-light-primary dark:focus:border-dark-primary ring-1 ring-inset ring-black/5 dark:ring-white/10 focus:ring-2'
                   }`}
                 id="email"
                 name="email"

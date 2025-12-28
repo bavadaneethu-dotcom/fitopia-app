@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { Screen } from '../types';
 import { supabase } from '../supabase';
+import { api } from '../src/services/api';
 
 interface SignupProps {
   onNavigate: (screen: Screen) => void;
@@ -64,15 +64,12 @@ const Signup: React.FC<SignupProps> = ({ onNavigate }) => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) throw error;
+      // Use the API service which handles signup AND profile creation fallback
+      // Assuming 'name' is not required for signup or can be an empty string if not collected
+      // If 'name' is a required field, it should be added to formData and the input form.
+      const data = await api.auth.signUp(formData.email, formData.password, '');
 
       if (data.user) {
-        // Profile creation is handled by Supabase Database Trigger
         onNavigate(Screen.CHARACTER_SELECT);
       }
     } catch (err: any) {
