@@ -33,6 +33,7 @@ import SettingsMembership from './screens/SettingsMembership';
 import FastingTimer from './screens/FastingTimer';
 import Biometrics from './screens/Biometrics';
 import Profile from './screens/Profile';
+import GeminiGenerator from './screens/GeminiGenerator';
 
 // Mock Data
 export const CHARACTERS: Character[] = [
@@ -284,7 +285,6 @@ const App: React.FC = () => {
       }
     }
     setSelectedDate(today);
-    // REMOVED automatic navigation to HOME to allow user to see the updated log on the same page
   };
 
   const handleAddFood = (item: FoodLogItem) => {
@@ -353,6 +353,7 @@ const App: React.FC = () => {
       case Screen.SETTINGS_APPS: return <SettingsApps onNavigate={handleNavigate} />;
       case Screen.SETTINGS_MEMBERSHIP: return <SettingsMembership onNavigate={handleNavigate} />;
       case Screen.COMPANIONS: return <Companions activeCharacter={activeCharacter} setActiveCharacter={setActiveCharacter} onBack={() => handleNavigate(Screen.HOME)} />;
+      case Screen.AI_LAB: return <GeminiGenerator onNavigate={handleNavigate} activeCharacter={activeCharacter} />;
       default: return <Welcome onNavigate={handleNavigate} />;
     }
   };
@@ -386,6 +387,7 @@ const App: React.FC = () => {
                  <MenuOption label="Hydration" icon="water_drop" color="bg-blue-500 text-white" onClick={() => handleNavigate(Screen.WATER_LOG)} delay="50ms" />
                  <MenuOption label="Record Workout" icon="fitness_center" color="bg-red-500 text-white" onClick={() => handleNavigate(Screen.MANUAL_WORKOUT)} delay="100ms" />
                  <MenuOption label="Mindfulness" icon="self_improvement" color="bg-teal-500 text-white" onClick={() => handleNavigate(Screen.MANUAL_MEDITATION)} delay="150ms" />
+                 <MenuOption label="ZPD Avatar Lab" icon="auto_awesome" color="bg-indigo-500 text-white" onClick={() => handleNavigate(Screen.AI_LAB)} delay="200ms" />
               </div>
            </div>
         </div>
@@ -438,7 +440,6 @@ const DateHeader: React.FC<{
 
   return (
     <header className="flex items-center justify-between px-6 pt-12 pb-4 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-2xl sticky top-0 border-b border-black/5 dark:border-white/5 select-none pointer-events-auto">
-      {/* Top Left Corner: Dates now clickable as buttons to navigate */}
       <div className="flex gap-4 min-w-[100px]">
           <button 
             onClick={() => onSelectDate(dayBefore)}
@@ -480,7 +481,6 @@ const DateHeader: React.FC<{
   );
 };
 
-// Compact, Complete CalendarModal
 const CalendarModal: React.FC<{ selectedDate: Date; onSelectDate: (d: Date) => void; onClose: () => void }> = ({ selectedDate, onSelectDate, onClose }) => {
     const [viewDate, setViewDate] = useState(new Date(selectedDate));
     const [yearInput, setYearInput] = useState(viewDate.getFullYear().toString());

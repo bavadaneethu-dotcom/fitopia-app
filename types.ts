@@ -31,7 +31,8 @@ export enum Screen {
   SETTINGS_MEMBERSHIP = 'settings_membership',
   FASTING_TIMER = 'fasting_timer',
   PROFILE = 'profile',
-  BIOMETRICS = 'biometrics'
+  BIOMETRICS = 'biometrics',
+  AI_LAB = 'ai_lab'
 }
 
 export interface ActivityLog {
