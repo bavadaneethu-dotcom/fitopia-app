@@ -34,6 +34,7 @@ import FastingTimer from './screens/FastingTimer';
 import Biometrics from './screens/Biometrics';
 import Profile from './screens/Profile';
 import GeminiGenerator from './screens/GeminiGenerator';
+import InstallPrompt from './components/InstallPrompt';
 
 // Mock Data
 export const CHARACTERS: Character[] = [
@@ -362,7 +363,7 @@ const App: React.FC = () => {
   const shouldShowNav = isMainApp && !isOverlayOpen;
 
   return (
-    <div className="flex flex-col h-screen w-full max-w-md mx-auto bg-light-bg dark:bg-dark-bg shadow-2xl overflow-hidden relative transition-colors duration-300">
+    <div className="flex flex-col h-screen h-[100dvh] w-full max-w-md mx-auto bg-light-bg dark:bg-dark-bg shadow-2xl overflow-hidden relative transition-colors duration-300 safe-area-inset">
       
       {shouldShowNav && currentScreen !== Screen.PROFILE && (
         <DateHeader 
@@ -418,6 +419,9 @@ const App: React.FC = () => {
           onClose={() => setIsCalendarOpen(false)} 
         />
       )}
+
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
     </div>
   );
 };

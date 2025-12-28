@@ -3,14 +3,39 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Fitopia</title>
-    <meta name="theme-color" content="#FACC15" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+    <title>Fitopia - Zootopia Fitness</title>
+    <meta name="description" content="A gamified fitness companion app featuring Zootopia characters. Track workouts, food, water, meditation, and fasting." />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#FACC15" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Fitopia" />
-    <link rel="apple-touch-icon" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
-    <link rel="manifest" href="/fitopia-app/manifest.json" />
+    <meta name="application-name" content="Fitopia" />
+    <meta name="msapplication-TileColor" content="#FACC15" />
+    <meta name="msapplication-config" content="/fitopia-app/browserconfig.xml" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="60x60" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="apple-touch-icon" sizes="57x57" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="shortcut icon" href="https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png" />
+    <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +103,38 @@
       body {
         -webkit-tap-highlight-color: transparent;
         overscroll-behavior-y: contain;
+        /* Safe area insets for modern phones with notches */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        /* Prevent text size adjustment on iOS */
+        -webkit-text-size-adjust: 100%;
+        /* Smooth scrolling on iOS */
+        -webkit-overflow-scrolling: touch;
+        /* Prevent pull-to-refresh overscroll on mobile */
+        overscroll-behavior: none;
+      }
+      /* Ensure app container respects safe areas */
+      #root {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      /* Mobile-first touch targets */
+      button, a, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+      }
+      /* Prevent zoom on input focus (iOS) */
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+      @media (max-width: 640px) {
+        /* Enhanced mobile typography */
+        body {
+          font-size: 16px;
+          line-height: 1.5;
+        }
       }
       .delay-100 { animation-delay: 100ms; }
       .delay-200 { animation-delay: 200ms; }

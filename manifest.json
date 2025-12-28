@@ -2,11 +2,17 @@
 {
   "name": "Fitopia - Zootopia Fitness",
   "short_name": "Fitopia",
-  "description": "A gamified fitness companion app featuring Zootopia characters.",
+  "description": "A gamified fitness companion app featuring Zootopia characters. Track workouts, food, water, meditation, and fasting with your favorite ZPD characters.",
   "start_url": "/fitopia-app/",
+  "scope": "/fitopia-app/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#FFFFFF",
   "theme_color": "#FACC15",
+  "categories": ["health", "fitness", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png",
@@ -15,9 +21,49 @@
       "purpose": "any maskable"
     },
     {
-      "src": "https://static.wikia.nocookie.net/zootopia/images/0/03/Nick_Wilde_Render.png",
+      "src": "https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Log Food",
+      "short_name": "Food",
+      "description": "Quickly log your meals",
+      "url": "/fitopia-app/#food_log",
+      "icons": [
+        {
+          "src": "https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Start Workout",
+      "short_name": "Workout",
+      "description": "Begin a workout session",
+      "url": "/fitopia-app/#workout",
+      "icons": [
+        {
+          "src": "https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "View Analytics",
+      "short_name": "Analytics",
+      "description": "Check your fitness progress",
+      "url": "/fitopia-app/#analytics",
+      "icons": [
+        {
+          "src": "https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
