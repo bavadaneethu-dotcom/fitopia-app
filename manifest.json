@@ -3,7 +3,7 @@
   "name": "Fitopia - Zootopia Fitness",
   "short_name": "Fitopia",
   "description": "A gamified fitness companion app featuring Zootopia characters.",
-  "start_url": ".",
+  "start_url": "/fitopia-app/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FACC15",
