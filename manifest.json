@@ -1,0 +1,23 @@
+
+{
+  "name": "Fitopia - Zootopia Fitness",
+  "short_name": "Fitopia",
+  "description": "A gamified fitness companion app featuring Zootopia characters.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FACC15",
+  "icons": [
+    {
+      "src": "https://static.wikia.nocookie.net/zootopia/images/a/aa/Judy_Hopps_Render.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://static.wikia.nocookie.net/zootopia/images/0/03/Nick_Wilde_Render.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

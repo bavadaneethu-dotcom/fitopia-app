@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { api } from './src/services/api';
 import { Screen, Character, ActivityLog, FoodLogItem, WaterLogItem, UserStats, FastingPlanConfig, FastingLog, WeightLog } from './types';
 import Home from './screens/Home';
 import Analytics from './screens/Analytics';
@@ -166,7 +165,7 @@ const App: React.FC = () => {
   const [unitSystem, setUnitSystem] = useState<'metric' | 'imperial'>('metric');
   const [dailyCalorieLimit, setDailyCalorieLimit] = useState<number>(2430);
   const [userGoal, setUserGoal] = useState<'lose' | 'maintain' | 'gain'>('maintain');
-
+  
   // Date State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -208,49 +207,6 @@ const App: React.FC = () => {
   // Inventory State
   const [inventory, setInventory] = useState<string[]>(['none']);
 
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  // Initial Data Loading & Auth Check
-  useEffect(() => {
-    const loadData = async () => {
-      const user = await api.auth.getUser();
-      setCurrentUser(user);
-
-      if (user) {
-        // Fetch Profile
-        try {
-          const profile = await api.profiles.get(user.id);
-          if (profile) {
-            if (profile.name) setUserStats(prev => ({ ...prev, name: profile.name }));
-            if (profile.stats) setUserStats(prev => ({ ...prev, ...profile.stats }));
-            if (profile.character?.active) {
-              const char = CHARACTERS.find(c => c.id === profile.character.active);
-              if (char) setActiveCharacter(char);
-            }
-            if (profile.inventory) setInventory(profile.inventory);
-            // Fasting State from Profile (if stored there) or default
-          }
-
-          // Fetch ALL Logs to populate history (Home will filter by date)
-          const logs = await api.logs.getAll(user.id);
-
-          setWorkoutLogs(logs.activity.filter((l: any) => l.type === 'workout'));
-          setMeditationLogs(logs.activity.filter((l: any) => l.type === 'meditation'));
-          setFoodLogs(logs.food);
-          setWaterLogs(logs.water);
-          setFastingLogs(logs.fasting);
-          setWeightLogs(logs.weight);
-
-        } catch (e) {
-          console.error("Error loading data", e);
-        }
-      } else {
-        setCurrentScreen(Screen.WELCOME);
-      }
-    };
-    loadData();
-  }, []); // Run only on mount (or when auth state changes if we added that dep, but separate effect handles auth init)
-
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -262,28 +218,19 @@ const App: React.FC = () => {
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
-  const handleUpdateUnitSystem = async (newSystem: 'metric' | 'imperial') => {
+  const handleUpdateUnitSystem = (newSystem: 'metric' | 'imperial') => {
     if (newSystem !== unitSystem) {
       const newStats = { ...userStats };
       const weightVal = parseFloat(userStats.weight);
       if (!isNaN(weightVal)) {
-        if (newSystem === 'imperial') {
-          newStats.weight = Math.round(weightVal * 2.20462).toString();
-        } else {
-          newStats.weight = Math.round(weightVal / 2.20462).toString();
-        }
+          if (newSystem === 'imperial') {
+              newStats.weight = Math.round(weightVal * 2.20462).toString();
+          } else {
+              newStats.weight = Math.round(weightVal / 2.20462).toString();
+          }
       }
       setUserStats(newStats);
       setUnitSystem(newSystem);
-
-      if (currentUser) {
-        // Persist unit system preference in Profile stats
-        try {
-          await api.profiles.update(currentUser.id, { stats: { ...newStats, unitSystem: newSystem } });
-        } catch (e) {
-          console.error("Failed to update unit system", e);
-        }
-      }
     }
   };
 
@@ -303,128 +250,78 @@ const App: React.FC = () => {
   const handleNavigate = (screen: Screen) => {
     setCurrentScreen(screen);
     setIsMenuOpen(false);
-    setIsOverlayOpen(false);
+    setIsOverlayOpen(false); 
   };
 
-  const handleUnlock = async (itemId: string) => {
+  const handleUnlock = (itemId: string) => {
     if (!inventory.includes(itemId)) {
-      const newInventory = [...inventory, itemId];
-      setInventory(newInventory);
-      if (currentUser) {
-        try {
-          await api.profiles.update(currentUser.id, { inventory: newInventory });
-        } catch (e) {
-          console.error("Failed to update inventory", e);
-        }
-      }
+      setInventory(prev => [...prev, itemId]);
     }
   };
 
-  const handleSessionComplete = async (type: 'workout' | 'meditation', data: any) => {
-    if (!currentUser) return;
+  const handleSessionComplete = (type: 'workout' | 'meditation', data: any) => {
     const today = new Date();
-    const dateKey = formatDateKey(today);
-
-    const newLog = {
-      user_id: currentUser.id,
-      type: type,
+    const newLog: ActivityLog = {
+      id: data.id || Date.now().toString(),
       title: data.title,
       icon: data.icon,
-      duration: data.duration,
+      duration: data.duration, 
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: formatDateKey(today),
       calories: data.calories,
-      color: data.color,
-      date: dateKey,
-      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      color: data.color
     };
-
-    try {
-      const savedLog = await api.logs.add('activity_logs', newLog);
-      // Optimistic update or re-fetch (using simple state update here)
-      const formattedLog: ActivityLog = { ...newLog, id: savedLog.id };
-
-      if (type === 'workout') {
-        setWorkoutLogs(prev => [formattedLog, ...prev]);
+    if (type === 'workout') {
+      if (data.id) {
+          setWorkoutLogs(prev => prev.map(x => x.id === data.id ? newLog : x));
       } else {
-        setMeditationLogs(prev => [formattedLog, ...prev]);
+          setWorkoutLogs(prev => [newLog, ...prev]);
       }
-      setSelectedDate(today);
-    } catch (e) {
-      console.error("Failed to save session", e);
+    } else {
+      if (data.id) {
+          setMeditationLogs(prev => prev.map(x => x.id === data.id ? newLog : x));
+      } else {
+          setMeditationLogs(prev => [newLog, ...prev]);
+      }
     }
+    setSelectedDate(today);
   };
 
-  const handleAddFood = async (item: FoodLogItem) => {
-    if (!currentUser) return;
+  const handleAddFood = (item: FoodLogItem) => {
     const today = new Date();
-    const dateKey = formatDateKey(today);
-
-    const newItem = {
-      user_id: currentUser.id,
-      name: item.name,
-      calories: item.calories,
-      macros: item.macros,
-      icon: item.icon,
-      display_amount: item.displayAmount, // Ensure casing matches DB
-      date: dateKey,
-      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    try {
-      const savedItem = await api.logs.add('food_logs', newItem);
-      setFoodLogs(prev => [{ ...item, id: savedItem.id, date: dateKey }, ...prev]);
-      setSelectedDate(today);
-    } catch (e) {
-      console.error("Failed to add food", e);
-    }
+    const newItem = { ...item, date: formatDateKey(today) };
+    setFoodLogs(prev => [newItem, ...prev]);
+    setSelectedDate(today);
   };
 
-  const handleAddWater = async (amount: number) => {
-    if (!currentUser) return;
+  const handleAddWater = (amount: number) => {
     const today = new Date();
-    const dateKey = formatDateKey(today);
-
-    const newItem = {
-      user_id: currentUser.id,
-      amount: amount,
-      date: dateKey,
-      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const newItem: WaterLogItem = {
+      id: Date.now().toString(),
+      amount,
+      timestamp: today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: formatDateKey(today)
     };
-
-    try {
-      const savedItem = await api.logs.add('water_logs', newItem);
-      setWaterLogs(prev => [{ ...savedItem } as WaterLogItem, ...prev]);
-      setSelectedDate(today);
-    } catch (e) {
-      console.error("Failed to add water", e);
-    }
+    setWaterLogs(prev => [newItem, ...prev]);
+    setSelectedDate(today);
   };
 
-  const handleFastingStateChange = async (fasting: boolean) => {
-    if (!currentUser) return;
+  const handleFastingStateChange = (fasting: boolean) => {
     if (!fasting && isFasting && fastStartTime) {
-      const now = new Date();
-      const diff = now.getTime() - fastStartTime.getTime();
-      const hours = Math.floor(diff / 3600000);
-      const mins = Math.floor((diff % 3600000) / 60000);
-      const dateKey = formatDateKey(now);
-
-      const newLog = {
-        user_id: currentUser.id,
-        duration: `${hours}h ${mins}m`,
-        start_time: fastStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        end_time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: dateKey
-      };
-
-      try {
-        const savedLog = await api.logs.add('fasting_logs', newLog);
-        setFastingLogs(prev => [{ ...savedLog, startTime: newLog.start_time, endTime: newLog.end_time } as FastingLog, ...prev]);
-      } catch (e) {
-        console.error("Failed to save fasting log", e);
-      }
+        const now = new Date();
+        const diff = now.getTime() - fastStartTime.getTime();
+        const hours = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const newLog: FastingLog = {
+            id: Date.now().toString(),
+            duration: `${hours}h ${mins}m`,
+            startTime: fastStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            endTime: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            date: formatDateKey(now)
+        };
+        setFastingLogs(prev => [newLog, ...prev]);
     }
     setIsFasting(fasting);
-    // Persist fasting state to profile if needed, or local storage. For now, just state.
   };
 
   const renderScreen = () => {
@@ -464,12 +361,12 @@ const App: React.FC = () => {
   const shouldShowNav = isMainApp && !isOverlayOpen;
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto bg-light-bg dark:bg-dark-bg shadow-2xl overflow-hidden relative transition-colors duration-300">
-
+    <div className="flex flex-col h-[100dvh] w-full max-w-md mx-auto bg-light-bg dark:bg-dark-bg shadow-2xl overflow-hidden relative transition-colors duration-300">
+      
       {shouldShowNav && currentScreen !== Screen.PROFILE && (
-        <DateHeader
-          activeCharacter={activeCharacter}
-          selectedDate={selectedDate}
+        <DateHeader 
+          activeCharacter={activeCharacter} 
+          selectedDate={selectedDate} 
           onOpenCalendar={() => setIsCalendarOpen(true)}
           onProfileClick={() => handleNavigate(Screen.PROFILE)}
           onSelectDate={setSelectedDate}
@@ -482,44 +379,44 @@ const App: React.FC = () => {
 
       {isMenuOpen && (
         <div className="fixed inset-0 z-[100] pointer-events-auto">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-fade-in" onClick={() => setIsMenuOpen(false)}></div>
-          <div className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 px-8 flex flex-col gap-3 items-center animate-fade-in-up z-10 pointer-events-none">
-            <div className="w-full max-w-[280px] flex flex-col gap-3 pointer-events-auto">
-              <MenuOption label="Log Meal" icon="restaurant" color="bg-orange-500 text-white" onClick={() => handleNavigate(Screen.FOOD_LOG)} delay="0ms" />
-              <MenuOption label="Hydration" icon="water_drop" color="bg-blue-500 text-white" onClick={() => handleNavigate(Screen.WATER_LOG)} delay="50ms" />
-              <MenuOption label="Record Workout" icon="fitness_center" color="bg-red-500 text-white" onClick={() => handleNavigate(Screen.MANUAL_WORKOUT)} delay="100ms" />
-              <MenuOption label="Mindfulness" icon="self_improvement" color="bg-teal-500 text-white" onClick={() => handleNavigate(Screen.MANUAL_MEDITATION)} delay="150ms" />
-            </div>
-          </div>
+           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] animate-fade-in" onClick={() => setIsMenuOpen(false)}></div>
+           <div className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 px-8 flex flex-col gap-3 items-center animate-fade-in-up z-10 pointer-events-none">
+              <div className="w-full max-w-[280px] flex flex-col gap-3 pointer-events-auto">
+                 <MenuOption label="Log Meal" icon="restaurant" color="bg-orange-500 text-white" onClick={() => handleNavigate(Screen.FOOD_LOG)} delay="0ms" />
+                 <MenuOption label="Hydration" icon="water_drop" color="bg-blue-500 text-white" onClick={() => handleNavigate(Screen.WATER_LOG)} delay="50ms" />
+                 <MenuOption label="Record Workout" icon="fitness_center" color="bg-red-500 text-white" onClick={() => handleNavigate(Screen.MANUAL_WORKOUT)} delay="100ms" />
+                 <MenuOption label="Mindfulness" icon="self_improvement" color="bg-teal-500 text-white" onClick={() => handleNavigate(Screen.MANUAL_MEDITATION)} delay="150ms" />
+              </div>
+           </div>
         </div>
       )}
 
       {shouldShowNav && (
-        <div className="fixed bottom-0 left-0 right-0 w-full max-w-lg mx-auto z-50 pointer-events-none">
+        <div className="fixed bottom-0 left-0 right-0 w-full max-w-md mx-auto z-50 pointer-events-none">
           <div className="bg-white/95 dark:bg-[#1C1C1E] backdrop-blur-2xl border-t border-black/5 dark:border-white/10 w-full h-[calc(4.5rem+env(safe-area-inset-bottom,0px))] flex justify-between items-center shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pointer-events-auto px-8 pb-[env(safe-area-inset-bottom,0px)] rounded-t-[1.5rem] relative">
             <NavItem icon="home" label="Home" isActive={currentScreen === Screen.HOME} onClick={() => handleNavigate(Screen.HOME)} />
             <NavItem icon="bar_chart" label="Stats" isActive={currentScreen === Screen.ANALYTICS} onClick={() => handleNavigate(Screen.ANALYTICS)} />
-
-            <div className="w-16"></div>
+            
+            <div className="w-16"></div> 
 
             <NavItem icon="emoji_events" label="Rewards" isActive={currentScreen === Screen.ACHIEVEMENTS} onClick={() => handleNavigate(Screen.ACHIEVEMENTS)} />
             <NavItem icon="settings" label="Settings" isActive={currentScreen === Screen.SETTINGS} onClick={() => handleNavigate(Screen.SETTINGS)} />
-
-            <button
-              onClick={toggleMenu}
-              className={`absolute left-1/2 -translate-x-1/2 -top-7 size-16 bg-yellow-400 dark:bg-yellow-400 rounded-full shadow-[0_8px_30px_rgb(250,204,21,0.4)] flex items-center justify-center text-black transition-all duration-300 hover:scale-110 active:scale-95 border-4 border-white dark:border-[#1C1C1E] pointer-events-auto z-[60] ${isMenuOpen ? 'rotate-45 bg-red-500 dark:bg-red-500 shadow-[0_8px_30px_rgb(239,68,68,0.4)]' : ''}`}
+            
+            <button 
+                onClick={toggleMenu}
+                className={`absolute left-1/2 -translate-x-1/2 -top-7 size-16 bg-yellow-400 dark:bg-yellow-400 rounded-full shadow-[0_8px_30px_rgb(250,204,21,0.4)] flex items-center justify-center text-black transition-all duration-300 hover:scale-110 active:scale-95 border-4 border-white dark:border-[#1C1C1E] pointer-events-auto z-[60] ${isMenuOpen ? 'rotate-45 bg-red-500 dark:bg-red-500 shadow-[0_8px_30px_rgb(239,68,68,0.4)]' : ''}`}
             >
-              <span className="material-symbols-outlined text-4xl font-black">add</span>
+                <span className="material-symbols-outlined text-4xl font-black">add</span>
             </button>
           </div>
         </div>
       )}
 
       {isCalendarOpen && (
-        <CalendarModal
-          selectedDate={selectedDate}
-          onSelectDate={(d) => { setSelectedDate(d); setIsCalendarOpen(false); }}
-          onClose={() => setIsCalendarOpen(false)}
+        <CalendarModal 
+          selectedDate={selectedDate} 
+          onSelectDate={(d) => { setSelectedDate(d); setIsCalendarOpen(false); }} 
+          onClose={() => setIsCalendarOpen(false)} 
         />
       )}
     </div>
@@ -527,84 +424,85 @@ const App: React.FC = () => {
 };
 
 const NavItem: React.FC<{ icon: string; label: string; isActive: boolean; onClick: () => void }> = ({ icon, label, isActive, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? 'text-yellow-500 scale-110' : 'text-gray-400 dark:text-gray-600'}`}
-  >
-    <span className={`material-symbols-outlined text-2xl ${isActive ? 'filled' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{icon}</span>
-    <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
-  </button>
+    <button 
+        onClick={onClick}
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 ${isActive ? 'text-yellow-500 scale-110' : 'text-gray-400 dark:text-gray-600'}`}
+    >
+        <span className={`material-symbols-outlined text-2xl ${isActive ? 'filled' : ''}`} style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}>{icon}</span>
+        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+    </button>
 );
 
 const MenuOption: React.FC<{ label: string; icon: string; color: string; onClick: () => void; delay: string }> = ({ label, icon, color, onClick, delay }) => (
-  <button
-    onClick={onClick}
-    style={{ animationDelay: delay }}
-    className="w-full h-14 bg-white dark:bg-[#1C1C1E] rounded-2xl flex items-center gap-4 px-5 shadow-lg active:scale-95 transition-all pointer-events-auto group animate-fade-in-up"
-  >
-    <div className={`size-10 rounded-xl flex items-center justify-center ${color}`}>
-      <span className="material-symbols-outlined text-xl">{icon}</span>
-    </div>
-    <span className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white group-hover:text-yellow-500">{label}</span>
-    <span className="material-symbols-outlined ml-auto text-gray-300">chevron_right</span>
-  </button>
+    <button 
+        onClick={onClick}
+        style={{ animationDelay: delay }}
+        className="w-full h-14 bg-white dark:bg-[#1C1C1E] rounded-2xl flex items-center gap-4 px-5 shadow-lg active:scale-95 transition-all pointer-events-auto group animate-fade-in-up"
+    >
+        <div className={`size-10 rounded-xl flex items-center justify-center ${color}`}>
+            <span className="material-symbols-outlined text-xl">{icon}</span>
+        </div>
+        <span className="text-sm font-black uppercase tracking-widest text-gray-800 dark:text-white group-hover:text-yellow-500">{label}</span>
+        <span className="material-symbols-outlined ml-auto text-gray-300">chevron_right</span>
+    </button>
 );
 
 const CalendarModal: React.FC<{ selectedDate: Date; onSelectDate: (d: Date) => void; onClose: () => void }> = ({ selectedDate, onSelectDate, onClose }) => {
-  const days = [];
-  const today = new Date();
-  for (let i = -14; i <= 7; i++) {
-    const d = new Date();
-    d.setDate(today.getDate() + i);
-    days.push(d);
-  }
+    const days = [];
+    const today = new Date();
+    for (let i = -14; i <= 7; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        days.push(d);
+    }
 
-  return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose}></div>
-      <div className="bg-white dark:bg-dark-surface w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative animate-pop-in border border-white/10">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-black uppercase tracking-tight text-gray-800 dark:text-white italic">Select Date</h3>
-          <button onClick={onClose} className="size-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-gray-800 dark:text-white">close</span>
-          </button>
+    return (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose}></div>
+            <div className="bg-white dark:bg-dark-surface w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative animate-pop-in border border-white/10">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-black uppercase tracking-tight text-gray-800 dark:text-white italic">Select Date</h3>
+                    <button onClick={onClose} className="size-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-gray-800 dark:text-white">close</span>
+                    </button>
+                </div>
+                <div className="grid grid-cols-4 gap-3 max-h-[40vh] overflow-y-auto no-scrollbar pr-2">
+                    {days.map((d, i) => {
+                        const isSelected = d.toDateString() === selectedDate.toDateString();
+                        const isToday = d.toDateString() === today.toDateString();
+                        return (
+                            <button 
+                                key={i}
+                                onClick={() => onSelectDate(d)}
+                                className={`flex flex-col items-center py-3 rounded-2xl border-2 transition-all ${
+                                    isSelected 
+                                    ? 'bg-yellow-400 border-yellow-400 text-black shadow-lg scale-105' 
+                                    : isToday
+                                        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-600 font-bold'
+                                        : 'bg-gray-50 dark:bg-white/5 border-transparent text-gray-400'
+                                }`}
+                            >
+                                <span className="text-[8px] font-black uppercase mb-1">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                                <span className="text-lg font-black">{d.getDate()}</span>
+                                <span className="text-[8px] font-black uppercase mt-1">{d.toLocaleDateString('en-US', { month: 'short' })}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <button 
+                    onClick={() => onSelectDate(new Date())}
+                    className="w-full mt-8 py-4 rounded-2xl bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-white font-black uppercase tracking-widest text-xs shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
+                >
+                    Jump to Today
+                </button>
+            </div>
         </div>
-        <div className="grid grid-cols-4 gap-3 max-h-[40vh] overflow-y-auto no-scrollbar pr-2">
-          {days.map((d, i) => {
-            const isSelected = d.toDateString() === selectedDate.toDateString();
-            const isToday = d.toDateString() === today.toDateString();
-            return (
-              <button
-                key={i}
-                onClick={() => onSelectDate(d)}
-                className={`flex flex-col items-center py-3 rounded-2xl border-2 transition-all ${isSelected
-                  ? 'bg-yellow-400 border-yellow-400 text-black shadow-lg scale-105'
-                  : isToday
-                    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700 text-yellow-600 font-bold'
-                    : 'bg-gray-50 dark:bg-white/5 border-transparent text-gray-400'
-                  }`}
-              >
-                <span className="text-[8px] font-black uppercase mb-1">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                <span className="text-lg font-black">{d.getDate()}</span>
-                <span className="text-[8px] font-black uppercase mt-1">{d.toLocaleDateString('en-US', { month: 'short' })}</span>
-              </button>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => onSelectDate(new Date())}
-          className="w-full mt-8 py-4 rounded-2xl bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-white font-black uppercase tracking-widest text-xs shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
-        >
-          Jump to Today
-        </button>
-      </div>
-    </div>
-  );
+    );
 };
 
-const DateHeader: React.FC<{
-  activeCharacter: Character;
-  selectedDate: Date;
+const DateHeader: React.FC<{ 
+  activeCharacter: Character; 
+  selectedDate: Date; 
   onOpenCalendar: () => void;
   onProfileClick: () => void;
   onSelectDate: (d: Date) => void;
@@ -621,41 +519,41 @@ const DateHeader: React.FC<{
   return (
     <header className="flex items-center justify-between px-6 pt-[calc(3rem+env(safe-area-inset-top,0px))] pb-4 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-2xl sticky top-0 border-b border-black/5 dark:border-white/5 select-none pointer-events-auto">
       <div className="flex gap-4 min-w-[100px]">
-        <button
-          onClick={() => onSelectDate(dayBefore)}
-          className="flex flex-col items-center group active:scale-95 transition-transform"
-        >
-          <span className="text-[9px] font-black text-gray-300 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getDayName(dayBefore)}</span>
-          <span className="text-lg font-black text-gray-300 tracking-tighter leading-none my-0.5 group-hover:text-yellow-500">{getDayNum(dayBefore)}</span>
-          <span className="text-[9px] font-black text-gray-300 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getMonthName(dayBefore)}</span>
-        </button>
-        <button
-          onClick={() => onSelectDate(yesterday)}
-          className="flex flex-col items-center group active:scale-95 transition-transform"
-        >
-          <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getDayName(yesterday)}</span>
-          <span className="text-lg font-black text-gray-400 tracking-tighter leading-none my-0.5 group-hover:text-yellow-500">{getDayNum(yesterday)}</span>
-          <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getMonthName(yesterday)}</span>
-        </button>
+          <button 
+            onClick={() => onSelectDate(dayBefore)}
+            className="flex flex-col items-center group active:scale-95 transition-transform"
+          >
+              <span className="text-[9px] font-black text-gray-300 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getDayName(dayBefore)}</span>
+              <span className="text-lg font-black text-gray-300 tracking-tighter leading-none my-0.5 group-hover:text-yellow-500">{getDayNum(dayBefore)}</span>
+              <span className="text-[9px] font-black text-gray-300 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getMonthName(dayBefore)}</span>
+          </button>
+          <button 
+            onClick={() => onSelectDate(yesterday)}
+            className="flex flex-col items-center group active:scale-95 transition-transform"
+          >
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getDayName(yesterday)}</span>
+              <span className="text-lg font-black text-gray-400 tracking-tighter leading-none my-0.5 group-hover:text-yellow-500">{getDayNum(yesterday)}</span>
+              <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter leading-none group-hover:text-yellow-500">{getMonthName(yesterday)}</span>
+          </button>
       </div>
 
-      <button
+      <button 
         onClick={onOpenCalendar}
         className="flex items-center gap-3 bg-[#FDFBF7] dark:bg-[#1C1C1E] px-6 py-2.5 rounded-full border border-gray-100 dark:border-white/10 shadow-lg active:scale-95 group backdrop-blur-xl relative cursor-pointer pointer-events-auto"
       >
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-bg px-2 rounded-full border border-gray-100 dark:border-white/5">
-          <span className="text-[8px] font-black text-gray-400">2025</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <span className="text-xs font-black text-gray-800 dark:text-white leading-none">
-            {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-        </div>
-        <span className="material-symbols-outlined text-yellow-400 text-lg font-bold">calendar_today</span>
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white dark:bg-dark-bg px-2 rounded-full border border-gray-100 dark:border-white/5">
+            <span className="text-[8px] font-black text-gray-400">2025</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xs font-black text-gray-800 dark:text-white leading-none">
+                {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <span className="material-symbols-outlined text-yellow-400 text-lg font-bold">calendar_today</span>
       </button>
 
       <button onClick={onProfileClick} className="size-11 rounded-full overflow-hidden border-2 border-white dark:border-white/20 shadow-md bg-white dark:bg-dark-surface p-0.5 cursor-pointer pointer-events-auto">
-        <img src={activeCharacter.image} className="w-full h-full object-cover object-top" alt="Profile" />
+          <img src={activeCharacter.image} className="w-full h-full object-cover object-top" alt="Profile" />
       </button>
     </header>
   );

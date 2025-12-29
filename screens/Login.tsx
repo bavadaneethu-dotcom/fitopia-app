@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
 import { Screen } from '../types';
-import { supabase } from '../supabase';
-import { api } from '../src/services/api';
 
 interface LoginProps {
   onNavigate: (screen: Screen) => void;
@@ -13,13 +11,11 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     email: '',
     password: ''
   });
-
+  
   const [errors, setErrors] = useState({
-    email: '',
-    submit: ''
+    email: ''
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const validateEmail = (email: string) => {
@@ -27,9 +23,9 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
     return emailRegex.test(email);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validate email
     let isValid = true;
     if (!formData.email) {
@@ -42,19 +38,8 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
       setErrors(prev => ({ ...prev, email: '' }));
     }
 
-    if (!isValid) return;
-
-    setIsLoading(true);
-    setErrors(prev => ({ ...prev, submit: '' }));
-
-    try {
-      await api.auth.signIn(formData.email, formData.password);
+    if (isValid) {
       onNavigate(Screen.HOME);
-    } catch (err: any) {
-      console.error('Login error:', err);
-      setErrors(prev => ({ ...prev, submit: err.message || 'Failed to login. Please check your credentials.' }));
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -64,8 +49,6 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
       // Clear error on change if it exists
       if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
     }
-    // Clear submit errors when typing
-    if (errors.submit) setErrors(prev => ({ ...prev, submit: '' }));
   };
 
   return (
@@ -89,29 +72,23 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <p className="text-light-text/60 dark:text-dark-text/60 text-sm font-medium">Ready to run wild? Log in to continue.</p>
         </div>
 
-        {errors.submit && (
-          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-500 rounded-xl text-xs font-bold text-center">
-            {errors.submit}
-          </div>
-        )}
-
         <form className="w-full space-y-5" onSubmit={handleSubmit}>
           {/* Email Field */}
           <div className="space-y-1.5">
             <label className="block text-sm font-bold ml-1 text-light-text/80 dark:text-dark-text/80" htmlFor="email">Email</label>
             <div className={`relative group transition-all duration-300 ${errors.email ? 'animate-shake' : ''}`}>
-              <input
-                className={`block w-full rounded-2xl border-2 bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 text-light-text dark:text-dark-text shadow-sm placeholder:text-gray-400 focus:outline-none transition-all duration-200 sm:text-sm sm:leading-6 ${errors.email
-                  ? 'border-red-300 focus:border-red-500 bg-red-50/50'
+              <input 
+                className={`block w-full rounded-2xl border-2 bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 text-light-text dark:text-dark-text shadow-sm placeholder:text-gray-400 focus:outline-none transition-all duration-200 sm:text-sm sm:leading-6 ${
+                  errors.email 
+                  ? 'border-red-300 focus:border-red-500 bg-red-50/50' 
                   : 'border-transparent focus:border-light-primary dark:focus:border-dark-primary ring-1 ring-inset ring-black/5 dark:ring-white/10 focus:ring-2'
-                  }`}
-                id="email"
-                name="email"
-                placeholder="judy.hopps@zpd.com"
+                }`}
+                id="email" 
+                name="email" 
+                placeholder="judy.hopps@zpd.com" 
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={isLoading}
               />
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                 <span className={`material-symbols-outlined text-[20px] transition-colors ${errors.email ? 'text-red-500' : 'text-gray-400'}`}>mail</span>
@@ -124,21 +101,20 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           <div className="space-y-1.5">
             <label className="block text-sm font-bold ml-1 text-light-text/80 dark:text-dark-text/80" htmlFor="password">Password</label>
             <div className="relative">
-              <input
-                className="block w-full rounded-2xl border-transparent bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 pr-12 text-light-text dark:text-dark-text shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-light-primary dark:focus:ring-dark-primary sm:text-sm sm:leading-6 transition-all duration-200 outline-none"
-                id="password"
-                name="password"
-                placeholder="••••••••"
+              <input 
+                className="block w-full rounded-2xl border-transparent bg-gray-50 dark:bg-white/5 py-4 px-5 pl-12 pr-12 text-light-text dark:text-dark-text shadow-sm ring-1 ring-inset ring-black/5 dark:ring-white/10 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-light-primary dark:focus:ring-dark-primary sm:text-sm sm:leading-6 transition-all duration-200 outline-none" 
+                id="password" 
+                name="password" 
+                placeholder="••••••••" 
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                disabled={isLoading}
               />
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                 <span className="material-symbols-outlined text-gray-400 text-[20px]">lock</span>
               </div>
-              <button
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-light-text dark:hover:text-dark-text transition-colors focus:outline-none"
+              <button 
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-light-text dark:hover:text-dark-text transition-colors focus:outline-none" 
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
               >
@@ -146,8 +122,8 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
               </button>
             </div>
             <div className="flex justify-end pt-1">
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={() => onNavigate(Screen.FORGOT_PASSWORD)}
                 className="text-xs font-bold text-light-muted dark:text-dark-muted hover:text-light-primary dark:hover:text-dark-primary transition-colors hover:underline"
               >
@@ -156,16 +132,11 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          <button
+          <button 
             type="submit"
-            disabled={isLoading}
-            className={`w-full mt-2 flex items-center justify-center rounded-full bg-yellow-400 dark:bg-yellow-500 py-4 px-4 text-base font-bold text-black dark:text-black shadow-lg shadow-yellow-400/25 dark:shadow-yellow-500/25 transition-all duration-300 hover:shadow-yellow-400/40 dark:hover:shadow-yellow-500/40 hover:scale-[1.01] active:scale-[0.98] ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className="w-full mt-2 flex items-center justify-center rounded-full bg-yellow-400 dark:bg-yellow-500 py-4 px-4 text-base font-bold text-black dark:text-black shadow-lg shadow-yellow-400/25 dark:shadow-yellow-500/25 transition-all duration-300 hover:shadow-yellow-400/40 dark:hover:shadow-yellow-500/40 hover:scale-[1.01] active:scale-[0.98]"
           >
-            {isLoading ? (
-              <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
-            ) : (
-              'Login'
-            )}
+            Login
           </button>
         </form>
 
@@ -178,7 +149,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        <button
+        <button 
           onClick={() => onNavigate(Screen.HOME)}
           className="relative w-full flex items-center justify-center gap-3 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 py-3.5 px-4 text-sm font-bold text-light-text dark:text-dark-text transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-[0.98]" type="button"
         >
@@ -193,12 +164,12 @@ const Login: React.FC<LoginProps> = ({ onNavigate }) => {
 
         <div className="mt-auto pt-6 text-center">
           <p className="text-sm font-medium text-light-text/60 dark:text-dark-text/60">
-            Don't have an account?
+            Don't have an account? 
             <button onClick={() => onNavigate(Screen.SIGNUP)} className="ml-1 text-light-text dark:text-dark-text font-bold hover:underline decoration-light-primary dark:decoration-dark-primary decoration-2 underline-offset-2">Sign Up</button>
           </p>
         </div>
       </div>
-
+      
       <style>{`
           @keyframes shake {
             0%, 100% { transform: translateX(0); }
